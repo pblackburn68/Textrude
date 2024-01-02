@@ -1,0 +1,44 @@
+{{
+func deepclone(tobj, clone = null)
+    ttype = object.typeof tobj
+}} Root Type {{ttype}} {{clone}} {{
+    if ttype == "object"
+        if !clone
+            clone = {}
+        end
+        for key in tobj | object.keys
+            ctype = object.typeof tobj[key]
+}} Key = {{ key }} of type {{ ctype }} with value {{ tobj[key] }}
+{{
+            if ctype == "array" || ctype == "object"
+                clone[key] = deepclone(tobj[key])
+            else
+                clone[key] = tobj[key]
+            end
+        end
+        ret clone
+    else if ttype == "array"
+        if !clone
+            clone = []
+        end
+        for aitem in tobj
+            atype = object.typeof aitem
+            if atype == "array" || atype == "object"
+                clone = array.add clone deepclone(aitem)
+            else
+                clone = array.add clone aitem
+            end
+        end
+        ret clone
+    end
+end
+}}
+{{model}}
+
+{{
+    cmodel = deepclone(model)
+    cmodel.company = "fairfield"
+    cmodel.tutorial[0].type = "ok"
+}}
+{{ cmodel }}
+{{ model }}

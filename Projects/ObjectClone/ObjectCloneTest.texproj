@@ -1,0 +1,56 @@
+{
+  "Version": 1,
+  "Description": "",
+  "EngineInput": {
+    "Definitions": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "IncludePaths": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "Models": [
+      {
+        "Format": 2,
+        "Text": "# A sample yaml file\r\ncompany: spacelift\r\ndomain:\r\n  - devops\r\n  - devsecops\r\ntutorial:\r\n  - yaml:\r\n    name: \u0022YAML Ain\u0027t Markup Language\u0022\r\n    type: awesome\r\n    born: 2001\r\n  - json:\r\n    name: JavaScript Object Notation\r\n    type: great\r\n    born: 2001\r\n  - xml:\r\n    name: Extensible Markup Language\r\n    type: good\r\n    born: 1996\r\nauthor: omkarbirade\r\npublished: tru",
+        "Path": "C:\\Development\\GitHub\\Textrude\\Projects\\ObjectClone\\YamlSample.yaml",
+        "Name": "model"
+      }
+    ],
+    "Template": "{{\r\nfunc deepclone(tobj, clone = null)\r\n    ttype = object.typeof tobj\r\n}} Root Type {{ttype}} {{clone}} {{\r\n    if ttype == \u0022object\u0022\r\n        if !clone\r\n            clone = {}\r\n        end\r\n        for key in tobj | object.keys\r\n            ctype = object.typeof tobj[key]\r\n}} Key = {{ key }} of type {{ ctype }} with value {{ tobj[key] }}\r\n{{\r\n            if ctype == \u0022array\u0022 || ctype == \u0022object\u0022\r\n                clone[key] = deepclone(tobj[key])\r\n            else\r\n                clone[key] = tobj[key]\r\n            end\r\n        end\r\n        ret clone\r\n    else if ttype == \u0022array\u0022\r\n        if !clone\r\n            clone = []\r\n        end\r\n        for aitem in tobj\r\n            atype = object.typeof aitem\r\n            if atype == \u0022array\u0022 || atype == \u0022object\u0022\r\n                clone = array.add clone deepclone(aitem)\r\n            else\r\n                clone = array.add clone aitem\r\n            end\r\n        end\r\n        ret clone\r\n    end\r\nend\r\n}}\r\n{{model}}\r\n\r\n{{\r\n    cmodel = deepclone(model)\r\n    cmodel.company = \u0022fairfield\u0022\r\n    cmodel.tutorial[0].type = \u0022ok\u0022\r\n}}\r\n{{ cmodel }}\r\n{{ model }}\r\n",
+    "TemplatePath": "C:\\Development\\GitHub\\Textrude\\Projects\\ObjectClone\\ObjectClone.sbn"
+  },
+  "OutputControl": {
+    "Outputs": [
+      {
+        "Format": "",
+        "Name": "output",
+        "Path": ""
+      }
+    ]
+  }
+}
