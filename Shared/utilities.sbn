@@ -1,0 +1,45 @@
+{{
+func __utils_newline
+# usage: utils.newline
+# description:
+# Inserts a new line cr/lf
+# example:
+# utils.newline
+"
+"
+end
+
+func __utils_objectclone(tobj, clone = null)
+    ttype = object.typeof tobj
+    # "objectclone("+tobj+") of type "+ttype+"\n
+    if ttype == "object"
+        if !clone
+            clone = {}
+        end
+        for key in tobj | object.keys
+            ctype = object.typeof tobj[key]
+            if ctype == "array" || ctype == "object"
+                clone[key] = __utils_objectclone(tobj[key])
+            else
+                clone[key] = tobj[key]
+            end
+        end
+        ret clone
+    else if ttype == "array" || ttype == "iterator"
+        if !clone
+            clone = = []
+        end
+        for aitem in tobj
+            atype = object.typeof aitem
+            if atype == "array" || atype == "object" || atype == "iterator"
+                clone = array.add clone __utils_objectclone (aitem)
+            else
+                clone = array.add clone aitem
+            end
+        end
+        ret clone
+    end
+end
+
+textrude.create_library this "utils"
+}}
