@@ -1,25 +1,42 @@
 {{
-    
+include "database.sbn"
+
 func __domain_getinterface(name)
 # https://github.com/scriban/scriban/issues/386
-    i = model.interfaces |
-        array.filter @(do(p); ret p.name == name; end) |
-        array.first |
-        utils.objectclone
-    ret i
+    iface = model.interfaces |
+            array.filter @(do(p); ret p.name == name; end) |
+            array.first |
+            utils.objectclone
+    ret iface
 end
 
 
 func __domain_getentity(name)
-# usage: domain.getentity (name)
+# usage: domain.getentity(name)
 # description: get a named entity from the domain model
 # example: |-
 # domain.getentity("User")
-    i = model.entities |
+    doment = model.entities |
         array.filter @(do(p); ret p.name == name; end) |
         array.first |
         utils.objectclone
-    ret i
+    if !doment
+        ret
+    end
+    for domep in doment?.properties
+        domep.sqlType = db.sqlType(domep)
+    end 
+    for ip in doment.interfaces | array.each @__domain_getinterface
+        for domip in ip.properties   
+            # "\n Interface Property  :"+domip+" Sql type ="+db.sqlType(domip)+"\n"
+            domip.sqlType = db.sqlType(domip)
+            doment.properties = array.add doment.properties domip
+        end
+        # ip = array.each ip @(do p); p.sqlType = __db_sqlType(p); end)
+        #"\nInterface Properties "+ip
+        #e.properties = array.add_range e.properties ip
+    end
+    ret doment
 end
 
 
@@ -33,7 +50,7 @@ props = []
 for p in item?.properties
     # Using null to determine if this is an object type
     if db.sqlType(p) == null
-        props = array.add_range props getkeys(p.type, p.name)
+        props = array.add_range props __domain_getkeys(p.type, p.name)
     else
         props = array.add props p 
     end
@@ -71,4 +88,6 @@ func __domain_getkeys(name, prefix = null)
     ret keys
 end
 
+
+textrude.create_library this "domain"
 }}

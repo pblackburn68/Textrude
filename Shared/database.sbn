@@ -1,7 +1,6 @@
 {{
-include "domain.sbn"
 
-func __db_sqlType (property)
+func __db_sqlType(property)
 # usage: db.sqltype (property)
 # description: determine sql data type from a Property object
 #w here Property object has the following properties type, length, precision, scale, isIdentity
@@ -14,7 +13,7 @@ func __db_sqlType (property)
     sdbtype = null
     len = property.length ?? 50
     case property.type
-        when "int32"
+        when "int", "int32"
             sdbtype = "INT"
         when "string"
             sdbtype= "VARCHAR("+len+")"
@@ -26,7 +25,7 @@ func __db_sqlType (property)
             sdbtype = "DATE"
         when "datetime"
             sdbtype = "DATETIME"
-        when "int64", "long"
+        when "long","int64"
             sdbtype = "BIGINT"
         when "short", "int16"
             sdbtype = "TINYINT"
@@ -40,25 +39,7 @@ func __db_sqlType (property)
     ret sdbtype
 end
 
-
-func __db_getentity (name)
-    e = domain.getentity (name)
-    for p in e?.properties
-        p.sqlType = __db_sqlType(p)
-    end 
-    for ip in e.interfaces | array.each @domain.getinterfaceproperties
-        for cip in ip   
-            cip.sqlType = __db_sqlType(cip)
-            e.properties = array. add e.properties cip
-        end
-        # ip = array.each ip @(do p); p.sqlType = __db_sqlType(p); end)
-        #"\nInterface Properties "+ip
-        #e.properties = array.add_range e.properties ip
-    end
-    ret e
-end
-
-func __db_schemaentity (name)
+func __db_schemaentity(name)
 # usage: db.schemaentity(fullname)
 # description: parse schema.entityname to object with Schema and Entity parts
 # example: |-
@@ -77,7 +58,7 @@ func __db_schemaentity (name)
     ret ts
 end
 
-func __db_commentblock (text)
+func __db_commentblock(text)
 # usage: db.commentblock(text)
 # description: Display text in a sql comment block
 # example: |-
@@ -87,10 +68,11 @@ func __db_commentblock (text)
 #   | Purpose: Show generated comment
 #   | *** Generated from scriban template ***
 #   +-----------------------------------------------------------------------------*/
+"/*+-----------------------------------------------------------------------------"
 for line in text | string.split "\n"
-"\n | "+line
+"\n  | "+line
 end
-"\n +-----------------------------------------------------------------------------*/"
+"\n  +-----------------------------------------------------------------------------*/"
 end
 
 

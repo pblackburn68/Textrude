@@ -1,0 +1,38 @@
+{
+  "Version": 1,
+  "Description": "",
+  "EngineInput": {
+    "Definitions": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "IncludePaths": [
+      "",
+      "",
+      "",
+      "c:\\Development\\MYGITHUB\\Textrude\\Shared\\"
+    ],
+    "Models": [
+      {
+        "Format": 2,
+        "Text": "name: FFS\r\ninterfaces: \r\n- name: IUser\r\n  properties:\r\n  - name: UserId\r\n    type: int\r\n    isIdentity: true\r\n    isKey: true\r\nentities:\r\n- name: User\r\n  interfaces: \r\n  - IUser\r\n  properties: \r\n  - name: FirstName\r\n    type: string\r\n    length: 255\r\n\r\n\r\n",
+        "Path": "C:\\Development\\MYGITHUB\\Textrude\\Projects\\DomainToSql\\DomainTest.yaml",
+        "Name": "model"
+      }
+    ],
+    "Template": "{{\r\ninclude \u0022domain.sbn\u0022\r\ninclude \u0022utilities.sbn\u0022\r\n\r\ndb.commentblock(\u0022Generate a SQL script based on a yaml File DomainTest.yaml\r\nPurpose: Quick example to demonstrate the power of scriban\u0022)\r\n}}\r\nUSE {{model.name}}\r\nSET QUOTED_IDENTIFIER, ARITHABORT, ANSI_NULLS, ANSI_WARNINGS ON\r\nGO \r\n{{\r\nfor e in model.entities\r\n    ts = db.schemaentity(e.name)\r\n}}\r\nIF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N\u0027[{{ts.schema}}].[{{ts.entity}}]\u0027) AND type IN (N\u0027U\u0027))\r\nBEGIN\r\n  \r\n    CREATE TABLE [{{ts.schema}}].[{{ts.entity}}]\r\n    (\r\n    {{~ dbe = domain.getentity(e.name)   \r\n        for p in dbe.properties~}}\r\n        [{{ p.name }}] {{ p.sqlType }},  \r\n    {{~end~}}    \r\n    )       \r\nEND     \r\n{{end}}  \r\n  ",
+    "TemplatePath": "C:\\Development\\MYGITHUB\\Textrude\\Projects\\DomainToSql\\DomainToSql.sbn"
+  },
+  "OutputControl": {
+    "Outputs": [
+      {
+        "Format": "",
+        "Name": "output",
+        "Path": ""
+      }
+    ]
+  }
+}

@@ -27,12 +27,12 @@ func __utils_objectclone(tobj, clone = null)
         ret clone
     else if ttype == "array" || ttype == "iterator"
         if !clone
-            clone = = []
+            clone = []
         end
         for aitem in tobj
             atype = object.typeof aitem
             if atype == "array" || atype == "object" || atype == "iterator"
-                clone = array.add clone __utils_objectclone (aitem)
+                clone = array.add clone __utils_objectclone(aitem)
             else
                 clone = array.add clone aitem
             end
