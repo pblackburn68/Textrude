@@ -13,12 +13,18 @@
       "",
       "",
       "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
       "c:\\Development\\MYGITHUB\\Textrude\\Shared\\"
     ],
     "Models": [
       {
         "Format": 2,
-        "Text": "name: FFS\r\ninterfaces: \r\n- name: IUser\r\n  properties:\r\n  - name: UserId\r\n    type: int\r\n    isIdentity: true\r\n    isKey: true\r\nentities:\r\n- name: User\r\n  interfaces: \r\n  - IUser\r\n  properties: \r\n  - name: FirstName\r\n    type: string\r\n    length: 255\r\n\r\n\r\n",
+        "Text": "name: FFS\r\ninterfaces: \r\n- name: IUser\r\n  properties:\r\n  - name: UserId\r\n    type: int\r\n    isIdentity: true\r\n    isKey: true\r\nentities:\r\n- name: User\r\n  interfaces: \r\n  - IUser\r\n  properties: \r\n  - name: FirstName\r\n    type: string\r\n    length: 255\r\n- name: Address\r\n  properties:\r\n  - name: Id\r\n    type: int32\r\n    isKey: true\r\n  -  name: House\r\n     type: string\r\n\r\n\r\n\r\n\r\n",
         "Path": "C:\\Development\\MYGITHUB\\Textrude\\Projects\\DomainToSql\\DomainTest.yaml",
         "Name": "model"
       }

@@ -14,5 +14,14 @@ entities:
   - name: FirstName
     type: string
     length: 255
+- name: Address
+  properties:
+  - name: Id
+    type: int32
+    isKey: true
+  -  name: House
+     type: string
+
+
 
 
