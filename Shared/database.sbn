@@ -3,7 +3,7 @@
 func __db_sqlType(property)
 # usage: db.sqltype (property)
 # description: determine sql data type from a Property object
-#w here Property object has the following properties type, length, precision, scale, isIdentity
+# where Property object has the following properties type, length, precision, scale, isIdentity
 # example: 1-
 # db.sqltype({type: "int32", isIdentity: true})
 # INT IDENTITY (1,1) NOT NULL
@@ -74,7 +74,6 @@ for line in text | string.split "\n"
 end
 "\n  +-----------------------------------------------------------------------------*/"
 end
-
 
 textrude.create_library this "db"
 }}

@@ -77,7 +77,6 @@ func __domain_getkeys(name, prefix = null)
     else
         entity = __domain_getentity(name)
         if entity
-    
             keys = array.add_range keys entity.properties |
                    array.filter @(do(p); ret p.iskey == true; end) |
                    utils.objectclone
