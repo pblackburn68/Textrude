@@ -10,28 +10,7 @@
       ""
     ],
     "IncludePaths": [
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "c:\\Development\\MYGITHUB\\Textrude\\Shared\\"
+        "c:\\Development\\MYGITHUB\\Textrude\\Shared\\"
     ],
     "Models": [
       {

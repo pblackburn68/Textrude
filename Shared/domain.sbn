@@ -31,14 +31,11 @@ func __domain_getentity(name)
         domep.sqlType = db.sqlType(domep)
     end 
     for ip in doment.interfaces | array.each @__domain_getinterface
-        for domip in ip.properties   
+        for domip in ip
             # "\n Interface Property  :"+domip+" Sql type ="+db.sqlType(domip)+"\n"
             domip.sqlType = db.sqlType(domip)
             doment.properties = array.add doment.properties domip
         end
-        # ip = array.each ip @(do p); p.sqlType = __db_sqlType(p); end)
-        #"\nInterface Properties "+ip
-        #e.properties = array.add_range e.properties ip
     end
     ret doment
 end
@@ -64,6 +61,10 @@ end
 
 
 func __domain_getkeys(name, prefix = null)
+# usage: domain.getkeys(name,prefix)
+# description: get all key properties for an entity, using an optional {key} replacement
+# example: |-
+# domain.getkeys("User")
     iface = __domain_getinterface(name)
     keys = []
     # "getKeys Name "+name+"\n"
