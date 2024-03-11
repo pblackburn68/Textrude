@@ -2,6 +2,10 @@
 include "database.sbn"
 
 func __domain_getinterface(name)
+# usage: domain.getinterface(name)
+# description: get a named interface from the domain model
+# example: |-
+# domain.getinterface("IAudit")
 # https://github.com/scriban/scriban/issues/386
     iface = model.interfaces |
             array.filter @(do(p); ret p.name == name; end) |
