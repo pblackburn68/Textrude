@@ -27,7 +27,7 @@ func __db_sqlType(property)
             sdbtype = "DATETIME"
         when "long","int64"
             sdbtype = "BIGINT"
-        when "short", "int16"
+        when "short","int16"
             sdbtype = "TINYINT"
     end
     if sdbtype
@@ -50,7 +50,7 @@ func __db_schemaentity(name)
 
     if parts | array.size == 2
         ts.schema = parts[0]
-        ts.entity = parts [1]
+        ts.entity = parts[1]
     else
         ts.schema = "dbo"
         ts.entity = name

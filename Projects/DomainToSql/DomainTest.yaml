@@ -6,6 +6,20 @@ interfaces:
     type: int
     isIdentity: true
     isKey: true
+  - name: UserName
+    type: string
+  - name: Lastname
+    type: string
+- name: IAudit
+  properties:
+    - name: Updated{key}
+      type: IUser
+    - name: UpdatedDate
+      type: datetime
+    - name: Created{key}
+      type: IUser
+    - name: CreatedDate
+      type: datetime
 entities:
 - name: User
   interfaces: 
