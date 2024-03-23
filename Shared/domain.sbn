@@ -27,10 +27,14 @@ func __domain_getentity(name)
     if !doment
         ret
     end
+    # set default sqltype for all properties
     for domep in doment?.properties
         domep.sqlType = db.sqlType(domep)
     end 
-    for ip in doment.interfaces | array.each @__domain_getinterface
+    # iterate over all interfaces used and get a cole of all their properties
+    for ip in doment?.interfaces | array.each @__domain_getinterfaceproperties
+        # for each interface property in the named interface
+        # set the corresponding sql type and add to the cloned object
         for domip in ip
             # "\n Interface Property  :"+domip+" Sql type ="+db.sqlType(domip)+"\n"
             domip.sqlType = db.sqlType(domip)
@@ -45,9 +49,10 @@ func __domain_getinterfaceproperties(name)
 # usage: domain.getinterfaceproperties(name)
 # description: get all interface properties for an entity
 # example: |-
-# domain.getentity("IAudit")
+# domain.getinterfaceproperties("IAudit")
 item = __domain_getinterface(name)
-props = []
+props = [] 
+# }}getinterface({{name}}){{"\n"}}{{
 for p in item?.properties
     # Using null to determine if this is an object type
     if db.sqlType(p) == null
@@ -62,30 +67,39 @@ end
 
 func __domain_getkeys(name, prefix = null)
 # usage: domain.getkeys(name,prefix)
-# description: get all key properties for an entity, using an optional {key} replacement
+# description: get all key properties for an entity, using an optional {key} replacement prefxi
+# if type is an object type then {key} will be the key field from the object type
 # example: |-
 # domain.getkeys("User")
     iface = __domain_getinterface(name)
     keys = []
-    # "getKeys Name "+name+"\n"
+    "getKeys("+name+")\n"
     if iface
-        # "Interface Properties :"+iface. Properties+"\n"
-        farr = iface.properties |
-               array.filter @(do(p); ret p.iskey == true; end)
-        # "Filtered Array       :""+farr+"\n"
-        keys = farr | utils.objectclone
+        # "Interface Properties :"+iface.properties+"\n"
+        keys = iface.properties |
+               array.filter @(do(p); ret p.isKey == true; end) | 
+               utils.objectclone
         # "Cloned Array         :"+keys+"\n"
     else
         entity = __domain_getentity(name)
         if entity
             keys = array.add_range keys entity.properties |
-                   array.filter @(do(p); ret p.iskey == true; end) |
+                   array.filter @(do(p); ret p.isKey == true; end) |
                    utils.objectclone
+            # Add default key 
+            # not being called for entities??
+            if !keys
+                keys = []
+                key = {name: name+"Id", type:"int"}
+                key.sqlType = db.sqlType(key)
+                keys[0] = key
+            end
         end
     end
+    # Mark all the child keys as not an identity as they are link fields eg. foriegn keys
     for k in keys
         if prefix
-            k.name = string.replace prefix "(key)" k.name
+            k.name = string.replace prefix "{key}" k.name
         end
         k.isIdentity = false;
     end

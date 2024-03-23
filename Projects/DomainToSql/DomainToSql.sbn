@@ -1,5 +1,5 @@
 {{
-include "database.sbn"
+include "domain.sbn"
 include "utilities.sbn"
 
 db.commentblock("Generate a SQL script based on a yaml File DomainTest.yaml
@@ -7,20 +7,30 @@ Purpose: Quick example to demonstrate the power of scriban")
 }}
 USE {{model.name}}
 SET QUOTED_IDENTIFIER, ARITHABORT, ANSI_NULLS, ANSI_WARNINGS ON
-GO
+GO 
 {{
 for e in model.entities
     ts = db.schemaentity(e.name)
 }}
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[{{ts.schema}}].[{{ts.entity}}]') AND type IN (N'U'))
 BEGIN
-
+  
     CREATE TABLE [{{ts.schema}}].[{{ts.entity}}]
     (
-    {{~ dbe = db.getentity(e.name)
+    {{~ dbe = domain.getentity(e.name)   
         for p in dbe.properties~}}
-        [{{ p.name }}] {{ p.sqlType }},
-    {{~end~}}
-    )
-END    
+        [{{ p.name }}] {{ p.sqlType }},  
+    {{~end~}}    
+    )       
+END     
+{{end}} 
+{{capture cs}}
+namespace {{model.name}} {
+    {{for e in model.entities}}
+class {{e.name}} {
+} 
+{{  end}}
+}
 {{end}}
+  
+  
