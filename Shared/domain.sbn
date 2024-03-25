@@ -31,21 +31,22 @@ func __domain_getentity(name)
     for domep in doment?.properties
         domep.sqlType = db.sqlType(domep)
     end 
-    # iterate over all interfaces used and get a cole of all their properties
+    # iterate over all interfaces used and get all their properties
     for ip in doment?.interfaces | array.each @__domain_getinterfaceproperties
         # for each interface property in the named interface
         # set the corresponding sql type and add to the cloned object
         for domip in ip
             # "\n Interface Property  :"+domip+" Sql type ="+db.sqlType(domip)+"\n"
             domip.sqlType = db.sqlType(domip)
-            domip.isKey = false;
-            doment.properties = doment.properties | array.add domip
+            # insert interface proprties at the beginning of the property array
+            fidx = 0
+            doment.properties = doment.properties | array.insert_at fidx++ domip
         end
     end
     keys = __domain_getentitykeys(doment)
     # If no key specified default adding a new int identity column
     if !keys || keys.size == 0
-        key = {name: name+"Id", type:"int", isIdentity: true}
+        key = {name: name+"Id", type:"int", isIdentity: true, isKey: true}
         key.sqlType = db.sqlType(key)
         doment.properties = doment.properties | array.insert_at 0 key
     end
@@ -97,25 +98,26 @@ func __domain_getentitykeys(entity)
 # usage: domain.getentitykeys(entity)
 # description: get all key properties for an given entity 
 # example: |-
-# e = domain.getentity("User")
-# domain.getentitykeys(e)
+# e = domain.getentitykeys("User")
     keys = []
     if entity
+        # "getentitykeys->entity->" + entity.properties
         keys = entity.properties |
             array.filter @(do(p); ret p.isKey == true; end) |
             utils.objectclone
+        # "\ngetentitykeys->\n" + keys + " size: "+keys.size
     end
+    # "getentitykeys" + keys
     ret keys
 end
 
 
 func __domain_getchildkeys(name, prefix = null)
-    # usage: domain.getchildkeys(name,prefix)
-    # description: get all key properties for an given child entity 
-    # with an optional prefix (normally primary key of child object type)
-    # example: |-
-    # keys = domain.getchildkeys("User")
-    # domain.getentitykeys(e)
+# usage: domain.getchildkeys(name,prefix)
+# description: get all key properties for an given child entity 
+# with an optional prefix (normally primary key of child object type)
+# example: |-
+# keys = domain.getchildkeys("User")
     keys = __domain_getkeys(name)
     # Mark all the child keys as not an identity as they are link fields eg. foriegn keys
     for k in keys
@@ -123,8 +125,35 @@ func __domain_getchildkeys(name, prefix = null)
             k.name = string.replace prefix "{key}" k.name
         end
         k.isIdentity = false;
+        k.isKey = false;
     end
     ret keys
 end
+
+
+func __domain_getkeynames(entity)
+# usage: domain.getkeyname(entity)
+# description: get all key names for an entity 
+# example: |-
+# e = domani.getentity("User")
+# keys = domain.getkeynames(e)
+# outputs UserId
+    keys = __domain_getentitykeys(entity)
+    ret keys | array.map "name" 
+end
+
+
+func __domain_getschemanames(model)
+# usage: domain.getschemanames(model)
+# description: get all schema names used in the domain model 
+# example: |-
+# snames = domain.getschemanames(model)
+# outputs UserId
+    schemas = model.entities |
+              array.filter @(do(p); ret p.schema != null; end) |
+              array.map "schema" 
+    ret schemas
+end
+
 textrude.create_library this "domain"
 }}

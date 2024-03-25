@@ -60,6 +60,11 @@ func __db_schemaentity(name)
     ret ts
 end
 
+func __db_primarykey(table, keys)
+    pksql = "CONSTRAINT [PK_"+table+"_"+(keys | array.join "_")+"] PRIMARY KEY CLUSTERED("+(keys | array.join ",")+")"
+    ret pksql
+end
+
 func __db_commentblock(text)
 # usage: db.commentblock(text)
 # description: Display text in a sql comment block
