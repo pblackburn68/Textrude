@@ -29,6 +29,8 @@ func __db_sqlType(property)
             sdbtype = "BIGINT"
         when "short","int16"
             sdbtype = "TINYINT"
+        when "binary"
+            sdbtype= "VARBINARY("+len+")"
     end
     if sdbtype
         if property.isIdentity == "true"

@@ -38,9 +38,18 @@ func __domain_getentity(name)
         for domip in ip
             # "\n Interface Property  :"+domip+" Sql type ="+db.sqlType(domip)+"\n"
             domip.sqlType = db.sqlType(domip)
-            doment.properties = array.add doment.properties domip
+            domip.isKey = false;
+            doment.properties = doment.properties | array.add domip
         end
     end
+    keys = __domain_getentitykeys(doment)
+    # If no key specified default adding a new int identity column
+    if !keys || keys.size == 0
+        key = {name: name+"Id", type:"int", isIdentity: true}
+        key.sqlType = db.sqlType(key)
+        doment.properties = doment.properties | array.insert_at 0 key
+    end
+    
     ret doment
 end
 
@@ -50,52 +59,64 @@ func __domain_getinterfaceproperties(name)
 # description: get all interface properties for an entity
 # example: |-
 # domain.getinterfaceproperties("IAudit")
-item = __domain_getinterface(name)
-props = [] 
-# }}getinterface({{name}}){{"\n"}}{{
-for p in item?.properties
-    # Using null to determine if this is an object type
-    if db.sqlType(p) == null
-        props = array.add_range props __domain_getkeys(p.type, p.name)
-    else
-        props = array.add props p 
+    item = __domain_getinterface(name)
+    props = [] 
+    for p in item?.properties
+        # Using null to determine if this is an object type
+        if db.sqlType(p) == null
+            props = array.add_range props __domain_getchildkeys(p.type, p.name)
+        else
+            props = array.add props p 
+        end
     end
-end
-ret props;
+    ret props;
 end
 
 
-func __domain_getkeys(name, prefix = null)
+func __domain_getkeys(name)
 # usage: domain.getkeys(name,prefix)
-# description: get all key properties for an entity, using an optional {key} replacement prefxi
+# description: get all key properties for an entity by name name, 
+# using an optional {key} replacement prefix,
 # if type is an object type then {key} will be the key field from the object type
 # example: |-
 # domain.getkeys("User")
     iface = __domain_getinterface(name)
     keys = []
-    "getKeys("+name+")\n"
+    # "getKeys("+name+")\n"
     if iface
-        # "Interface Properties :"+iface.properties+"\n"
-        keys = iface.properties |
-               array.filter @(do(p); ret p.isKey == true; end) | 
-               utils.objectclone
-        # "Cloned Array         :"+keys+"\n"
+        ret __domain_getentitykeys(iface)
+        # "Interface Properties :"+props+"\n"        
     else
         entity = __domain_getentity(name)
-        if entity
-            keys = array.add_range keys entity.properties |
-                   array.filter @(do(p); ret p.isKey == true; end) |
-                   utils.objectclone
-            # Add default key 
-            # not being called for entities??
-            if !keys
-                keys = []
-                key = {name: name+"Id", type:"int"}
-                key.sqlType = db.sqlType(key)
-                keys[0] = key
-            end
-        end
+        ret __domain_getentitykeys(entity)
     end
+end
+
+
+func __domain_getentitykeys(entity)
+# usage: domain.getentitykeys(entity)
+# description: get all key properties for an given entity 
+# example: |-
+# e = domain.getentity("User")
+# domain.getentitykeys(e)
+    keys = []
+    if entity
+        keys = entity.properties |
+            array.filter @(do(p); ret p.isKey == true; end) |
+            utils.objectclone
+    end
+    ret keys
+end
+
+
+func __domain_getchildkeys(name, prefix = null)
+    # usage: domain.getchildkeys(name,prefix)
+    # description: get all key properties for an given child entity 
+    # with an optional prefix (normally primary key of child object type)
+    # example: |-
+    # keys = domain.getchildkeys("User")
+    # domain.getentitykeys(e)
+    keys = __domain_getkeys(name)
     # Mark all the child keys as not an identity as they are link fields eg. foriegn keys
     for k in keys
         if prefix
@@ -105,7 +126,5 @@ func __domain_getkeys(name, prefix = null)
     end
     ret keys
 end
-
-
 textrude.create_library this "domain"
 }}
