@@ -24,8 +24,8 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[{{schema
 BEGIN
     CREATE TABLE [{{schema}}].[{{e.name}}]
     (
-    {{~ dbe = domain.getentity(e.name)
-    for p in dbe.properties~}}   
+    {{~ dbe = domain.getentity(e.name) 
+    for p in dbe?.properties~}} 
         [{{ p.name }}] {{ p.sqlType }},      
     {{~end~}} 
         {{db.primarykey(e.name, domain.getkeynames(dbe))}}

@@ -7,6 +7,7 @@ func __domain_getinterface(name)
 # example: |-
 # domain.getinterface("IAudit")
 # https://github.com/scriban/scriban/issues/386
+    # "Calling domain.getinterface(";name;")\n"
     iface = model.interfaces |
             array.filter @(do(p); ret p.name == name; end) |
             array.first |
@@ -20,11 +21,13 @@ func __domain_getentity(name)
 # description: get a named entity from the domain model
 # example: |-
 # domain.getentity("User")
+    # "Calling domain.getentity(";name;")\n"
     doment = model.entities |
         array.filter @(do(p); ret p.name == name; end) |
         array.first |
         utils.objectclone
     if !doment
+        "Unable to find entity [";name;"]\n"
         ret
     end
     # set default sqltype for all properties
@@ -36,14 +39,14 @@ func __domain_getentity(name)
         # for each interface property in the named interface
         # set the corresponding sql type and add to the cloned object
         for domip in ip
-            # "\n Interface Property  :"+domip+" Sql type ="+db.sqlType(domip)+"\n"
             domip.sqlType = db.sqlType(domip)
-            # insert interface proprties at the beginning of the property array
+            # insert interface properties into the beginning of the property array
             fidx = 0
             doment.properties = doment.properties | array.insert_at fidx++ domip
         end
     end
     keys = __domain_getentitykeys(doment)
+    # "getentity(";name;") -> domain.getentitykeys()->";keys;keys.size;"\n"
     # If no key specified default adding a new int identity column
     if !keys || keys.size == 0
         key = {name: name+"Id", type:"int", isIdentity: true, isKey: true}
@@ -60,10 +63,12 @@ func __domain_getinterfaceproperties(name)
 # description: get all interface properties for an entity
 # example: |-
 # domain.getinterfaceproperties("IAudit")
+    # "Calling domain.getinterfaceproperties(";name;")\n"
     item = __domain_getinterface(name)
     props = [] 
     for p in item?.properties
-        # Using null to determine if this is an object type
+        # Interface property ";p.name;" ";p.type;"sqltype=";db.sqlType(p);"\n"
+        # Using null sqlType to determine if this is an object type
         if db.sqlType(p) == null
             props = array.add_range props __domain_getchildkeys(p.type, p.name)
         else
@@ -81,12 +86,11 @@ func __domain_getkeys(name)
 # if type is an object type then {key} will be the key field from the object type
 # example: |-
 # domain.getkeys("User")
+    # "Calling domain.getkeys(";name;")\n"
     iface = __domain_getinterface(name)
     keys = []
-    # "getKeys("+name+")\n"
     if iface
-        ret __domain_getentitykeys(iface)
-        # "Interface Properties :"+props+"\n"        
+        ret __domain_getentitykeys(iface)   
     else
         entity = __domain_getentity(name)
         ret __domain_getentitykeys(entity)
@@ -99,27 +103,27 @@ func __domain_getentitykeys(entity)
 # description: get all key properties for an given entity 
 # example: |-
 # e = domain.getentitykeys("User")
+    # "Calling domain.getentitykeys(";entity;")\n"
     keys = []
     if entity
-        # "getentitykeys->entity->" + entity.properties
         keys = entity.properties |
             array.filter @(do(p); ret p.isKey == true; end) |
             utils.objectclone
-        # "\ngetentitykeys->\n" + keys + " size: "+keys.size
     end
     # "getentitykeys" + keys
     ret keys
 end
 
 
-func __domain_getchildkeys(name, prefix = null)
-# usage: domain.getchildkeys(name,prefix)
-# description: get all key properties for an given child entity 
-# with an optional prefix (normally primary key of child object type)
-# example: |-
+func __domain_getchildkeys(type, prefix = null)
+# usage: domain.getchildkeys(type,prefix)
+# description: get all key properties for a given child property type
+# with an optional prefix (eg. When linking to the same interface/type more than once then you require a unique name)
+# eg domain.getchildkeys("IUser", "Primary{key}") would map IUser to property named PrimaryUserId
 # keys = domain.getchildkeys("User")
+    # "Calling domain.getchildkeys(";type;",";prefix;")\n"
     keys = __domain_getkeys(name)
-    # Mark all the child keys as not an identity as they are link fields eg. foriegn keys
+    # Mark all the child keys as not an identity as they are link fields eg. foreign keys
     for k in keys
         if prefix
             k.name = string.replace prefix "{key}" k.name

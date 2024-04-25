@@ -21,6 +21,8 @@ func __db_sqlType(property)
             prec = property.precision ?? 18
             scale = property.scale ?? 6
             sdbtype = "DECIMAL ("+prec+", "+scale+")"
+        when "bool","boolean","bit"
+            sdbtype = "BIT"
         when "date"
             sdbtype = "DATE"
         when "datetime"

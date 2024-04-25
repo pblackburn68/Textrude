@@ -15,26 +15,36 @@ interfaces:
     - name: Created{key} 
       type: IUser  
     - name: CreatedDate
-      type: datetime 
+      type: datetime
+- name: IReference
+  interfaces:
+  - IAudit
+  properties:
+    - name: Description
+      type: string
+      length: 255
+    - name: IsActive
+      type: bool
+      default: 1 
 entities:   
 - name: User        
   interfaces:          
   - IUser
   properties:  
-  - name: FirstName 
+  - name: Firstname 
     type: string 
-    length: 255
+    length: 512
+  - name: Lastname 
+    type: string 
+    length: 512
 - name: Address
   properties:
-  - name: Id    
-    type: int32 
-    isKey: true
   - name: House 
     type: string  
 - name: AddressType
   schema: Reference
   interfaces: 
-  - IAudit
+  - IReference
   properties:
   - name: Description
     type: string
