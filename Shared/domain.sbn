@@ -7,11 +7,19 @@ func __domain_getinterface(name)
 # example: |-
 # domain.getinterface("IAudit")
 # https://github.com/scriban/scriban/issues/386
-    # "Calling domain.getinterface(";name;")\n"
+    "Calling domain.getinterface(";name;")\n"
+    aname = name | string.split ":"
+    if aname.size > 1
+       name = aname[0] 
+    end
     iface = model.interfaces |
             array.filter @(do(p); ret p.name == name; end) |
             array.first |
             utils.objectclone
+    if aname.size > 1
+        iface.position = aname[1]
+    end
+    "returning domain.getinterface(";iface;")\n"
     ret iface
 end
 
@@ -21,7 +29,7 @@ func __domain_getentity(name)
 # description: get a named entity from the domain model
 # example: |-
 # domain.getentity("User")
-    # "Calling domain.getentity(";name;")\n"
+    "Calling domain.getentity(";name;")\n"
     doment = model.entities |
         array.filter @(do(p); ret p.name == name; end) |
         array.first |
@@ -34,18 +42,29 @@ func __domain_getentity(name)
     for domep in doment?.properties
         domep.sqlType = db.sqlType(domep)
     end 
+    "Entity has the following interfaces";doment?.interfaces;"\n"
     # iterate over all interfaces used and get all their properties
+    # iterating over direct interface not parsed!!
     for ip in doment?.interfaces | array.each @__domain_getinterfaceproperties
+        "Adding interface properties ";ip;"-";doment.properties.size;"\n"
+        ipos = ip?.position ?? 1
         # for each interface property in the named interface
         # set the corresponding sql type and add to the cloned object
         for domip in ip
             domip.sqlType = db.sqlType(domip)
-            # insert interface properties into the beginning of the property array
-            fidx = 0
+            # if position = 0 then insert interface properties into the beginning of the property array
+            # otherwise append them 
+            if ipos == 0
+                fidx = 0
+            else
+                fidx = doment.properties.size
+            end
+            "Adding interface property ";fidx;ip;"\n"
             doment.properties = doment.properties | array.insert_at fidx++ domip
         end
     end
     keys = __domain_getentitykeys(doment)
+    # "Found the following keys ";keys;"\n"
     # "getentity(";name;") -> domain.getentitykeys()->";keys;keys.size;"\n"
     # If no key specified default adding a new int identity column
     if !keys || keys.size == 0
