@@ -7,7 +7,7 @@ func __domain_getinterface(name)
 # example: |-
 # domain.getinterface("IAudit")
 # https://github.com/scriban/scriban/issues/386
-    "Calling domain.getinterface(";name;")\n"
+    # "Calling domain.getinterface(";name;")\n"
     aname = name | string.split ":"
     if aname.size > 1
        name = aname[0] 
@@ -16,10 +16,13 @@ func __domain_getinterface(name)
             array.filter @(do(p); ret p.name == name; end) |
             array.first |
             utils.objectclone
+    if !iface
+        "domain.getinterface(";name;"). Interface not found\n"
+        ret
+    end
     if aname.size > 1
         iface.position = aname[1]
     end
-    "returning domain.getinterface(";iface;")\n"
     ret iface
 end
 
@@ -29,7 +32,7 @@ func __domain_getentity(name)
 # description: get a named entity from the domain model
 # example: |-
 # domain.getentity("User")
-    "Calling domain.getentity(";name;")\n"
+    #"Calling domain.getentity(";name;")\n"
     doment = model.entities |
         array.filter @(do(p); ret p.name == name; end) |
         array.first |
@@ -42,24 +45,25 @@ func __domain_getentity(name)
     for domep in doment?.properties
         domep.sqlType = db.sqlType(domep)
     end 
-    "Entity has the following interfaces";doment?.interfaces;"\n"
+    # "Entity has the following interfaces";doment?.interfaces;"\n"
     # iterate over all interfaces used and get all their properties
-    # iterating over direct interface not parsed!!
-    for ip in doment?.interfaces | array.each @__domain_getinterfaceproperties
-        "Adding interface properties ";ip;"-";doment.properties.size;"\n"
-        ipos = ip?.position ?? 1
+    for iname in doment?.interfaces  
+        iface = __domain_getinterface(iname)
+        # "Adding interface properties ";iface;"-";doment.properties?.size;"\n"
+        ipos = iface?.position ?? 1
         # for each interface property in the named interface
         # set the corresponding sql type and add to the cloned object
-        for domip in ip
+        for domip in __domain_getinterfaceproperties(iface)
             domip.sqlType = db.sqlType(domip)
+            domip.isKey = false
             # if position = 0 then insert interface properties into the beginning of the property array
             # otherwise append them 
             if ipos == 0
                 fidx = 0
             else
-                fidx = doment.properties.size
+                fidx = doment.properties?.size ?? 0
             end
-            "Adding interface property ";fidx;ip;"\n"
+            #"Adding interface property ";domip;"\n"
             doment.properties = doment.properties | array.insert_at fidx++ domip
         end
     end
@@ -77,16 +81,26 @@ func __domain_getentity(name)
 end
 
 
-func __domain_getinterfaceproperties(name)
-# usage: domain.getinterfaceproperties(name)
+func __domain_getinterfacepropertiesbyname(name)
+# usage: domain.getinterfacepropertiesbyname(name)
+# description: get all interface properties for an named interface
+# example: |-
+# domain.getinterfacepropertiesbyname("IAudit")
+    # "Calling domain.getinterfaceproperties(";name;")\n"
+    item = __domain_getinterface(name)
+    ret __domain_getinterfaceproperties(item)
+end
+
+
+func __domain_getinterfaceproperties(item)
+# usage: domain.getinterfaceproperties(item)
 # description: get all interface properties for an entity
 # example: |-
 # domain.getinterfaceproperties("IAudit")
-    # "Calling domain.getinterfaceproperties(";name;")\n"
-    item = __domain_getinterface(name)
+# "Calling domain.getinterfaceproperties(";name;")\n"
     props = [] 
     for p in item?.properties
-        # Interface property ";p.name;" ";p.type;"sqltype=";db.sqlType(p);"\n"
+        # "Interface property ";p.name;" ";p.type;"sqltype=";db.sqlType(p);"\n"
         # Using null sqlType to determine if this is an object type
         if db.sqlType(p) == null
             props = array.add_range props __domain_getchildkeys(p.type, p.name)
@@ -96,7 +110,7 @@ func __domain_getinterfaceproperties(name)
     end
     ret props;
 end
-
+    
 
 func __domain_getkeys(name)
 # usage: domain.getkeys(name,prefix)
