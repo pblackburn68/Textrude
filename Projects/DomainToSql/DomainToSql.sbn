@@ -14,7 +14,7 @@ IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{{
 BEGIN
    EXEC('CREATE SCHEMA [{{s}}] AUTHORIZATION [dbo]');
 END{{~end}}
-GO
+GO 
 
 {{
 for e in model.entities
@@ -29,14 +29,14 @@ BEGIN
         [{{ p.name }}] {{ p.sqlType }},      
     {{~end~}} 
         {{db.primarykey(e.name, domain.getkeynames(dbe))}}
-    )         
-END     
-{{end}}   
+    )   
+END  
+{{end}} 
 {{capture cs}}
 namespace {{model.name}} {
     {{for e in model.entities}}
-class {{e.name}} { 
-} 
+class {{e.name}} {
+}
 {{  end}}
 }
 {{end}}

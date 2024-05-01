@@ -29,7 +29,7 @@ interfaces:
 entities:   
 - name: User        
   interfaces:          
-  - IUser
+  - IUser:0
   properties:  
   - name: Firstname 
     type: string 
@@ -45,9 +45,8 @@ entities:
   schema: Reference
   interfaces: 
   - IReference
-  properties:
-  - name: Description
-    type: string
+  - IUser   
+ 
 
   
 
