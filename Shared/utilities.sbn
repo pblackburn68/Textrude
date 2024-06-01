@@ -10,20 +10,25 @@ func __utils_newline
 end
 
 func __utils_objectclone(tobj, clone = null)
+# usage: utils.objectclone(object, clone)
+# description: deep copy of an object and arrays 
+# clone is passed when calling recursivelyoptional 
+# example: |-
+# domain.getentity("User") | utils.object.clone
     if !tobj
         ret
     end
     ttype = object.typeof tobj
-    "Calling objectclone(";tobj;") of type ";ttype;"\n"
+    #"objectclone(";tobj;") of type ";ttype;"\n"
     if ttype == "object"
         if !clone
             clone = {}
         end
         for key in tobj | object.keys
-            "Child key ";key;" type ";object.typeof tobj[key];"\n"
+            #"objectclone: ";key;" type ";object.typeof tobj[key];"\n"
             ctype = object.typeof tobj[key]
-            if ctype == "array" || ctype == "object"
-                "Calling recursive objectclone(";tobj;") of type ";ttype;"\n"
+            if ctype== "array" || ctype == "object"
+                #"objectclone recurse(";tobj;") of type ";ttype;"\n"
                 clone[key] = __utils_objectclone(tobj[key])
             else
                 clone[key] = tobj[key]
@@ -36,11 +41,9 @@ func __utils_objectclone(tobj, clone = null)
         end
         for aitem in tobj
             atype = object.typeof aitem
-            "Calling recursive array objectclone(";aitem;") of type ";atype;"\n"
+            # "Calling recursive array objectclone(";aitem;") of type ";atype;"\n"
             if atype == "array" || atype == "object" || atype == "iterator"
-                if atype.size > 0 
-                    clone = array.add clone __utils_objectclone(aitem)
-                end
+                clone = array.add clone __utils_objectclone(aitem)
             else
                 clone = array.add clone aitem
             end

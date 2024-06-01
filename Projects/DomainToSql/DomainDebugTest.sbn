@@ -3,7 +3,7 @@ include "domain.sbn"
 include "database.sbn"
 include "utilities.sbn"
 
-}}Interfaces
+}}Interfaces 
 {{
 for iface in model.interfaces}}
 {{~iface.name~}}
@@ -13,12 +13,11 @@ for iface in model.interfaces}}
 for iface in model.interfaces}}
 Interface  {{iface.name}}
 Properties
-{{~ for iprops in domain.getinterfaceproperties(iface.name)~}}
-    {{ iprops.name}} 
-{{
+{{~ for iprops in domain.getinterfacepropertiesbyname(iface.name)~}}
+    Name: {{ iprops.name}} 
+{{  
     end 
-end}}
-
+end}} 
 {{ 
 for e in model.entities
     entity = domain.getentity(e.name)}}

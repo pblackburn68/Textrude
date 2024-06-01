@@ -35,7 +35,7 @@ func __domain_getentity(name)
     #"Calling domain.getentity(";name;")\n"
     doment = model.entities |
         array.filter @(do(p); ret p.name == name; end) |
-        array.first |
+        array.first  |
         utils.objectclone
     if !doment
         "Unable to find entity [";name;"]\n"
@@ -55,7 +55,9 @@ func __domain_getentity(name)
         # set the corresponding sql type and add to the cloned object
         for domip in __domain_getinterfaceproperties(iface)
             domip.sqlType = db.sqlType(domip)
-            domip.isKey = false
+            # Set indicator this is a top level prime interface
+            domip.pIFace = true
+            # domip.isKey = false
             # if position = 0 then insert interface properties into the beginning of the property array
             # otherwise append them 
             if ipos == 0
@@ -86,7 +88,7 @@ func __domain_getinterfacepropertiesbyname(name)
 # description: get all interface properties for an named interface
 # example: |-
 # domain.getinterfacepropertiesbyname("IAudit")
-    # "Calling domain.getinterfaceproperties(";name;")\n"
+    # "Calling domain.getinterfacepropertiesbyname(";name;")\n"
     item = __domain_getinterface(name)
     ret __domain_getinterfaceproperties(item)
 end
@@ -97,11 +99,12 @@ func __domain_getinterfaceproperties(item)
 # description: get all interface properties for an entity
 # example: |-
 # domain.getinterfaceproperties("IAudit")
-# "Calling domain.getinterfaceproperties(";name;")\n"
+    # "Calling domain.getinterfaceproperties(";item;")\n"
     props = [] 
     for p in item?.properties
         # "Interface property ";p.name;" ";p.type;"sqltype=";db.sqlType(p);"\n"
         # Using null sqlType to determine if this is an object type
+        # if this is an object type then just get the child objects keys
         if db.sqlType(p) == null
             props = array.add_range props __domain_getchildkeys(p.type, p.name)
         else
@@ -155,7 +158,7 @@ func __domain_getchildkeys(type, prefix = null)
 # eg domain.getchildkeys("IUser", "Primary{key}") would map IUser to property named PrimaryUserId
 # keys = domain.getchildkeys("User")
     # "Calling domain.getchildkeys(";type;",";prefix;")\n"
-    keys = __domain_getkeys(name)
+    keys = __domain_getkeys(type)
     # Mark all the child keys as not an identity as they are link fields eg. foreign keys
     for k in keys
         if prefix

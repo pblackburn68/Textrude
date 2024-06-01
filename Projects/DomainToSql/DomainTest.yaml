@@ -44,11 +44,7 @@ entities:
   schema: Reference
   interfaces: 
   - IReference
-  - IAudit
-  properties:
-  - name: Description
-    type: string
-
+  
   
 
 

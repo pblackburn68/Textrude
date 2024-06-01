@@ -15,34 +15,18 @@
       "",
       "",
       "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
       "c:\\Development\\MYGITHUB\\Textrude\\Shared\\"
     ],
     "Models": [
       {
         "Format": 2,
-        "Text": "name: FFS\r\ninterfaces: \r\n- name: IUser\r\n  properties:\r\n  - name: UserId\r\n    type: int\r\n    isIdentity: true\r\n    isKey: true\r\n- name: IAudit\r\n  properties:\r\n    - name: Updated{key}\r\n      type: IUser \r\n    - name: UpdatedDate\r\n      type: datetime\r\n    - name: Created{key} \r\n      type: IUser\r\n    - name: CreatedDate\r\n      type: datetime\r\n- name: IReference\r\n  interfaces:\r\n  - IAudit\r\n  properties:\r\n    - name: Description\r\n      type: string\r\n      length: 255\r\n    - name: IsActive\r\n      type: bool\r\n      default: 1\r\nentities:   \r\n- name: User        \r\n  interfaces:          \r\n  - IUser:0\r\n  properties:  \r\n  - name: FirstName \r\n    type: string \r\n    length: 255\r\n  - name: Lastname\r\n    type: string\r\n- name: Address\r\n  properties:\r\n  - name: House \r\n    type: string  \r\n- name: AddressType\r\n  schema: Reference\r\n  interfaces: \r\n  - IReference\r\n  - IAudit\r\n  properties:\r\n  - name: Description\r\n    type: string\r\n\r\n  \r\n\r\n\r\n",
-        "Path": "C:\\Development\\MyGitHub\\Textrude\\Projects\\DomainToSql\\DomainTest.yaml",
+        "Text": "name: FFS\r\ninterfaces: \r\n- name: IUser\r\n  properties:\r\n  - name: UserId\r\n    type: int\r\n    isIdentity: true\r\n    isKey: true\r\n- name: IAudit\r\n  properties:\r\n    - name: Updated{key}\r\n      type: IUser \r\n    - name: UpdatedDate\r\n      type: datetime\r\n    - name: Created{key} \r\n      type: IUser\r\n    - name: CreatedDate\r\n      type: datetime\r\n- name: IReference\r\n  interfaces:\r\n  - IAudit\r\n  properties:\r\n    - name: Description\r\n      type: string\r\n      length: 255\r\n    - name: IsActive\r\n      type: bool\r\n      default: 1\r\nentities:   \r\n- name: User        \r\n  interfaces:          \r\n  - IUser:0\r\n  properties:  \r\n  - name: FirstName \r\n    type: string \r\n    length: 255\r\n  - name: Lastname\r\n    type: string\r\n- name: Address\r\n  properties:\r\n  - name: House \r\n    type: string  \r\n- name: AddressType\r\n  schema: Reference\r\n  interfaces: \r\n  - IReference\r\n  \r\n  \r\n\r\n\r\n",
+        "Path": "..\\..\\MyGitHub\\Textrude\\Projects\\DomainToSql\\DomainTest.yaml",
         "Name": "model"
       }
     ],
-    "Template": "{{\r\ninclude \u0022domain.sbn\u0022\r\ninclude \u0022database.sbn\u0022\r\ninclude \u0022utilities.sbn\u0022\r\n\r\n}}Interfaces\r\n{{\r\nfor iface in model.interfaces}}\r\n{{~iface.name~}}\r\n{{end~}} \r\n\r\n{{ \r\nfor iface in model.interfaces}}\r\nInterface  {{iface.name}}\r\nProperties\r\n{{~ for iprops in domain.getinterfaceproperties(iface.name)~}}\r\n    {{ iprops.name}} \r\n{{\r\n    end \r\nend}}\r\n\r\n{{ \r\nfor e in model.entities\r\n    entity = domain.getentity(e.name)}}\r\nEntity  {{e.name}}\r\nProperties\r\n{{~ for p in entity.properties~}}\r\n    {{ p.name}} \r\n{{ \r\n    end\r\nend}}",
-    "TemplatePath": "C:\\Development\\MyGitHub\\Textrude\\Projects\\DomainToSql\\DomainDebugTest.sbn"
+    "Template": "{{\r\ninclude \u0022domain.sbn\u0022\r\ninclude \u0022database.sbn\u0022\r\ninclude \u0022utilities.sbn\u0022\r\n\r\n}}Interfaces \r\n{{\r\nfor iface in model.interfaces}}\r\n{{~iface.name~}}\r\n{{end~}} \r\n\r\n{{ \r\nfor iface in model.interfaces}}\r\nInterface  {{iface.name}}\r\nProperties\r\n{{~ for iprops in domain.getinterfacepropertiesbyname(iface.name)~}}\r\n    Name: {{ iprops.name}} \r\n{{  end \r\nend}} \r\n{{ \r\nfor e in model.entities\r\n    entity = domain.getentity(e.name)}}\r\nEntity  {{e.name}}\r\nProperties\r\n{{~ for p in entity.properties~}}\r\n    {{ p }} \r\n{{ \r\n    end\r\nend}}",
+    "TemplatePath": "..\\..\\MyGitHub\\Textrude\\Projects\\DomainToSql\\DomainDebugTest.sbn"
   },
   "OutputControl": {
     "Outputs": [
