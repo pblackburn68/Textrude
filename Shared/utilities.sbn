@@ -10,15 +10,20 @@ func __utils_newline
 end
 
 func __utils_objectclone(tobj, clone = null)
+    if !tobj
+        ret
+    end
     ttype = object.typeof tobj
-    # "Calling objectclone(";tobj;") of type ";ttype;"\n"
+    "Calling objectclone(";tobj;") of type ";ttype;"\n"
     if ttype == "object"
         if !clone
             clone = {}
         end
         for key in tobj | object.keys
+            "Child key ";key;" type ";object.typeof tobj[key];"\n"
             ctype = object.typeof tobj[key]
             if ctype == "array" || ctype == "object"
+                "Calling recursive objectclone(";tobj;") of type ";ttype;"\n"
                 clone[key] = __utils_objectclone(tobj[key])
             else
                 clone[key] = tobj[key]
@@ -31,8 +36,11 @@ func __utils_objectclone(tobj, clone = null)
         end
         for aitem in tobj
             atype = object.typeof aitem
+            "Calling recursive array objectclone(";aitem;") of type ";atype;"\n"
             if atype == "array" || atype == "object" || atype == "iterator"
-                clone = array.add clone __utils_objectclone(aitem)
+                if atype.size > 0 
+                    clone = array.add clone __utils_objectclone(aitem)
+                end
             else
                 clone = array.add clone aitem
             end
