@@ -158,7 +158,7 @@ func __domain_getkeynames(entity)
 # usage: domain.getkeyname(entity)
 # description: get all key names for an entity 
 # example: |-
-# e = domani.getentity("User")
+# e = domain.getentity("User")
 # keys = domain.getkeynames(e)
 # outputs UserId
     keys = __domain_getentitykeys(entity)
