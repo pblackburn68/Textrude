@@ -1,0 +1,31 @@
+{{
+include "domain.sbn"
+include "database.sbn"
+include "utilities.sbn"
+
+}}Interfaces
+{{
+for iface in model.interfaces}}
+{{~iface.name~}}
+{{end~}} 
+
+{{ 
+for iface in model.interfaces}}
+Interface  {{iface.name}}
+Properties
+{{~ for iprops in domain.getinterfaceproperties(iface.name)~}}
+    {{ iprops.name}} 
+{{
+    end 
+end}}
+
+{{ 
+for e in model.entities
+    entity = domain.getentity(e.name)}}
+Entity  {{e.name}}
+Properties
+{{~ for p in entity.properties~}}
+    {{ p.name}} 
+{{ 
+    end
+end}}
