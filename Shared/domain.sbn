@@ -54,10 +54,15 @@ func __domain_getentity(name)
         # for each interface property in the named interface
         # set the corresponding sql type and add to the cloned object
         for domip in __domain_getinterfaceproperties(iface)
-            domip.sqlType = db.sqlType(domip)
+            
             # Set indicator this is a top level prime interface
             domip.pIFace = true
-            # domip.isKey = false
+            domip.isKeyI = domip.isKey
+            domip.isIdentityI = domip.isIdentity
+            domip.isKey = false
+            domip.isIdentity = false
+
+            domip.sqlType = db.sqlType(domip)
             # if position = 0 then insert interface properties into the beginning of the property array
             # otherwise append them 
             if ipos == 0
@@ -65,7 +70,7 @@ func __domain_getentity(name)
             else
                 fidx = doment.properties?.size ?? 0
             end
-            #"Adding interface property ";domip;"\n"
+            # "Adding interface property ";domip;"\n"
             doment.properties = doment.properties | array.insert_at fidx++ domip
         end
     end
@@ -74,8 +79,20 @@ func __domain_getentity(name)
     # "getentity(";name;") -> domain.getentitykeys()->";keys;keys.size;"\n"
     # If no key specified default adding a new int identity column
     if !keys || keys.size == 0
-        key = {name: name+"Id", type:"int", isIdentity: true, isKey: true}
-        key.sqlType = db.sqlType(key)
+        keyName = name+"Id";
+        key = __domain_getproperty(doment.properties, keyName)
+        if !key 
+            key = {name: keyName, type:"int", isIdentity: true, isKey: true}
+            key.sqlType = db.sqlType(key)
+        else
+            if (key.pIFace)
+                key.isKey = key.isKeyI
+                key.isIdentity = key.isIdentityI
+            else
+                key.isKey = true
+                key.isIdentity = true
+            end
+        end
         doment.properties = doment.properties | array.insert_at 0 key
     end
     
@@ -195,5 +212,12 @@ func __domain_getschemanames(model)
     ret schemas
 end
 
+func __domain_getproperty(properties, name)
+    # "Calling domain.getchilgetproperty(";properties;",";name;")\n"
+    prop = properties | 
+           array.filter @(do(p); ret p.name == name; end) |
+           array.first
+    ret prop
+end      
 textrude.create_library this "domain"
 }}
