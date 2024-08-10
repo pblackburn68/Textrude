@@ -52,5 +52,22 @@ func __utils_objectclone(tobj, clone = null)
     end
 end
 
+func __utils_commentblock(text)
+    # usage: db.commentblock(text)
+    # description: Display text in a sql comment block
+    # example: |-
+    # db.commentblock("File: SomeFile.Sql\nPurpose: Show generated comment\n*** Generated from scriban template ***")
+    # /*+-----------------------------------------------------------------------------
+    #   | File: SomeFile.Sql
+    #   | Purpose: Show generated comment
+    #   | *** Generated from scriban template ***
+    #   +-----------------------------------------------------------------------------*/
+    "/*+-----------------------------------------------------------------------------"
+    for line in text | string.split "\n"
+    "\n  | "+line
+    end
+    "\n  +-----------------------------------------------------------------------------*/"
+    end
+
 textrude.create_library this "utils"
 }}

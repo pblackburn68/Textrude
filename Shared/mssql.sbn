@@ -1,0 +1,159 @@
+{{
+include "domain.sbn"
+
+func __mssql_getentity(name)
+# usage: mssql.getentity(name)
+# description: Get a named entity from the domain model with sql server specific attributes eg SqlType
+# example: |-
+# mssql.getentity("User")
+    
+    doment = domain.getentity(name)
+    # set default sqltype for all properties
+    for domep in doment?.properties
+        domep.sqlType = mssql.sqlType(domep)
+    end 
+    # "Entity has the following interfaces";doment?.interfaces;"\n"
+    # iterate over all interfaces used and get all their properties
+    for iname in doment?.interfaces  
+        iface = __domain_getinterface(iname)
+        # "Adding interface properties ";iface;"-";doment.properties?.size;"\n"
+        ipos = iface?.position ?? 1
+        # for each interface property in the named interface
+        # set the corresponding sql type and add to the cloned object
+        for domip in __mssql_getinterfaceproperties(iface)
+            
+            # Set indicator this is a top level prime interface
+            if !iface.useKey 
+                domip.isKey = false
+                domip.isIdentity = false
+            end
+            domip.sqlType = mssql.sqlType(domip)
+            # if position = 0 then insert interface properties into the beginning of the property array
+            # otherwise append them 
+            if ipos == 0
+                fidx = 0
+            else
+                fidx = doment.properties?.size ?? 0
+            end
+            # "Adding interface property ";domip;"\n"
+            doment.properties = doment.properties | array.insert_at fidx++ domip
+        end
+    end
+    keys = __domain_getentitykeys(doment)
+    # "Found the following keys ";keys;"\n"
+    # "getentity(";name;") -> domain.getentitykeys()->";keys;keys.size;"\n"
+    # If no key specified default adding a new int identity column
+    if !keys || keys.size == 0
+        keyName = name+"Id";
+        key = __domain_getproperty(doment.properties, keyName)
+        if !key 
+            key = {name: keyName, type:"int", isIdentity: true, isKey: true}
+            key.sqlType = mssql.sqlType(key)
+        else
+            if (key.pIFace)
+                key.isKey = key.isKeyI
+                key.isIdentity = key.isIdentityI
+            else
+                key.isKey = true
+                key.isIdentity = true
+            end
+        end
+        doment.properties = doment.properties | array.insert_at 0 key
+    end
+    
+    ret doment
+end
+    
+
+func __mssql_getinterfaceproperties(item)
+# usage: mssql.getinterfaceproperties(item)
+# description: get all interface properties for an entity
+# example: |-
+# domain.getinterfaceproperties("IAudit")
+    # "Calling domain.getinterfaceproperties(";item;")\n"
+    props = [] 
+    for p in item?.properties
+        # "Interface property ";p.name;" ";p.type;"sqltype=";db.sqlType(p);"\n"
+        # Using null sqlType to determine if this is an object type
+        # if this is an object type then just get the child objects keys
+        if mssql.sqlType(p) == null
+            props = array.add_range props __domain_getchildkeys(p.type, p.name)
+        else
+            props = array.add props p 
+        end
+    end
+    ret props;
+end
+
+
+func __mssql_sqlType(property)
+# usage: db.sqltype (property)
+# description: determine sql data type from a Property object
+# where Property object has the following properties type, length, precision, scale, isIdentity
+# example: 1-
+# db.sqltype({type: "int32", isIdentity: true})
+# INT IDENTITY (1,1) NOT NULL
+    if ! property
+        ret
+    end
+    sdbtype = null
+    len = property.length ?? 50
+    case property.type
+        when "int", "int32"
+            sdbtype = "INT"
+        when "string"
+            sdbtype= "VARCHAR("+len+")"
+        when "decimal","numeric","float"
+            prec = property.precision ?? 18
+            scale = property.scale ?? 6
+            sdbtype = "DECIMAL ("+prec+", "+scale+")"
+        when "bool","boolean","bit"
+            sdbtype = "BIT"
+        when "date"
+            sdbtype = "DATE"
+        when "datetime"
+            sdbtype = "DATETIME"
+        when "long","int64"
+            sdbtype = "BIGINT"
+        when "short","int16"
+            sdbtype = "TINYINT"
+        when "binary"
+            sdbtype= "VARBINARY("+len+")"
+    end
+    if sdbtype
+        if property.isIdentity == "true"
+            sdbtype = sdbtype + " IDENTITY("+(property.seed ?? 1)+", 1)"
+        end
+        sdbtype = sdbtype + (property.isNullable == "true" ? " NULL" : " NOT NULL")
+    end
+    ret sdbtype
+end
+
+func __mssql_schemaentity(name)
+# usage: db.schemaentity(fullname)
+# description: parse schema.entityname to object with Schema and Entity parts
+# example: |-
+# db.schemaentity("Reference.Test")
+# {Schema: "Reference", Entity: "Test"}
+    parts = name | string.split "."
+    ts = {}
+
+    if parts | array.size == 2
+        ts.schema = parts[0]
+        ts.entity = parts[1]
+    else
+        ts.schema = "dbo"
+        ts.entity = name
+    end
+    ret ts
+end
+
+func __mssql_primarykey(table, keys)
+    pksql = "CONSTRAINT [PK_"+table+"_"+(keys | array.join "_")+"] PRIMARY KEY CLUSTERED("+(keys | array.join ",")+")"
+    ret pksql
+end
+
+
+
+textrude.create_library this "mssql"
+}}
