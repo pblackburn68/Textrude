@@ -33,9 +33,10 @@ BEGIN
 END 
 {{end}}
 {{capture cs}}
-namespace {{model.name}} {
+namespace {{model.name}} { 
     {{for e in model.entities}}
-class {{e.name}} {
+public class {{e.name}} {{domain.getinterfacescsv(e)}} 
+{
 }
 {{  end}}
 }

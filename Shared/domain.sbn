@@ -50,6 +50,23 @@ func __domain_getinterface(name)
 end
 
 
+func __domain_getinterfacescsv(entity)
+    list = ""
+    name = ""
+    for i in entity?.interfaces
+        name = i
+        aname = i | string.split ":"
+        if aname.size > 1
+            name = aname[0] 
+        end
+        list = list + name + ", " 
+    end
+    if list != ''
+        list = string.remove_last list ","
+        list = ": "+list
+    end
+    ret list
+end
 
 
 func __domain_getinterfacepropertiesbyname(name)
