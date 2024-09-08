@@ -23,6 +23,22 @@
       "",
       "",
       "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
       "c:\\Development\\MYGITHUB\\Textrude\\Shared\\"
     ],
     "Models": [
@@ -33,7 +49,7 @@
         "Name": "model"
       }
     ],
-    "Template": "{{\r\ninclude \u0022domain.sbn\u0022\r\ninclude \u0022database.sbn\u0022\r\ninclude \u0022utilities.sbn\u0022\r\n\r\n}}Interfaces \r\n{{\r\nfor iface in model.interfaces}}\r\n{{~iface.name~}}\r\n{{end~}} \r\n\r\n{{ \r\nfor iface in model.interfaces}}\r\nInterface  {{iface.name}}\r\nProperties\r\n{{~ for iprops in domain.getinterfacepropertiesbyname(iface.name)~}}\r\n    Name: {{ iprops.name}} \r\n{{  end \r\nend}} \r\n{{ \r\nfor e in model.entities\r\n    entity = domain.getentity(e.name)}}\r\nEntity  {{e.name}}\r\nProperties\r\n{{~ for p in entity.properties~}}\r\n    {{ p }} \r\n{{ \r\n    end\r\nend}}",
+    "Template": "{{\r\ninclude \u0022domain.sbn\u0022\r\ninclude \u0022mssql.sbn\u0022\r\ninclude \u0022utilities.sbn\u0022\r\n\r\n}}Interfaces \r\n{{\r\nfor iface in model.interfaces}}\r\n{{~iface.name~}}\r\n{{end~}} \r\n\r\n{{ \r\nfor iface in model.interfaces}}\r\nInterface  {{iface.name}}\r\nProperties\r\n{{~ for iprops in domain.getinterfacepropertiesbyname(iface.name)~}}\r\n    Name: {{ iprops.name}} \r\n{{  end \r\nend}} \r\n{{ \r\nfor e in model.entities\r\n    entity = domain.getentity(e.name)}}\r\nEntity  {{e.name}}\r\nProperties\r\n{{~ for p in entity.properties~}}\r\n    {{ p }} \r\n{{ \r\n    end\r\nend}}",
     "TemplatePath": "..\\..\\MyGitHub\\Textrude\\Projects\\DomainToSql\\DomainDebugTest.sbn"
   },
   "OutputControl": {

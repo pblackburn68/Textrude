@@ -1,9 +1,31 @@
 {{
+func __domain_getentity(name)
+# usage: domain.getentity(name)
+# description: get a named entity from the domain model
+# example: |-
+# domain.getentity("User")
+    #"Calling domain.getentity(";name;")\n"
+    doment = model.entities |
+        array.filter @(do(p); ret p.name == name; end) |
+        array.first  |
+        utils.objectclone
+    if !doment
+        "Unable to find entity [";name;"]\n"
+        ret
+    end
+    ret doment
+end
+
+
 func __domain_getinterface(name)
-# usage: domain.getinterface(name)
 # description: get a named interface from the domain model
+# usage: domain.getinterface(name)
+# params: name - interface name, can also pass optional 
+#   position after name seperated by semi colon where position 0 indicates add 
+#   interface items BEFORE entity proprties and 1 add them after 
 # example: |-
 # domain.getinterface("IAudit")
+# domain.getinterface("IUser:0")
 # https://github.com/scriban/scriban/issues/386
     # "Calling domain.getinterface(";name;")\n"
     aname = name | string.split ":"
@@ -28,22 +50,6 @@ func __domain_getinterface(name)
 end
 
 
-func __domain_getentity(name)
-# usage: domain.getentity(name)
-# description: get a named entity from the domain model
-# example: |-
-# domain.getentity("User")
-    #"Calling domain.getentity(";name;")\n"
-    doment = model.entities |
-        array.filter @(do(p); ret p.name == name; end) |
-        array.first  |
-        utils.objectclone
-    if !doment
-        "Unable to find entity [";name;"]\n"
-        ret
-    end
-    ret doment
-end
 
 
 func __domain_getinterfacepropertiesbyname(name)
@@ -102,7 +108,6 @@ func __domain_getentitykeys(entity)
             array.filter @(do(p); ret p.isKey == true; end) |
             utils.objectclone
     end
-    # "getentitykeys" + keys
     ret keys
 end
 
@@ -159,5 +164,6 @@ func __domain_getproperty(properties, name)
            array.first
     ret prop
 end      
+
 textrude.create_library this "domain"
 }}

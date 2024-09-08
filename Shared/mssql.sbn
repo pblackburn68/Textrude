@@ -1,16 +1,29 @@
 {{
+# Sql server specific domain functions
 include "domain.sbn"
 
 func __mssql_getentity(name)
 # usage: mssql.getentity(name)
 # description: Get a named entity from the domain model with sql server specific attributes eg SqlType
+#  also expands all interface properties
 # example: |-
 # mssql.getentity("User")
-    
     doment = domain.getentity(name)
+    if (!doment)
+        ret
+    end
     # set default sqltype for all properties
     for domep in doment?.properties
         domep.sqlType = mssql.sqlType(domep)
+        # No matching sql type so assuming of type class
+        if (!domep.sqlType)
+            # "\nType not found ";domep.type;"\n"
+            ckeys = mssql.getkeys(domep.type)
+            # "Keys";ckeys;"\n"
+            if (ckeys)
+                domep = ckeys[0]
+            end
+        end
     end 
     # "Entity has the following interfaces";doment?.interfaces;"\n"
     # iterate over all interfaces used and get all their properties
@@ -39,31 +52,60 @@ func __mssql_getentity(name)
             doment.properties = doment.properties | array.insert_at fidx++ domip
         end
     end
+   
+    # Check if the entity has a key field specified
+    # if not found then add key field of type int identity
     keys = __domain_getentitykeys(doment)
-    # "Found the following keys ";keys;"\n"
+
     # "getentity(";name;") -> domain.getentitykeys()->";keys;keys.size;"\n"
     # If no key specified default adding a new int identity column
-    if !keys || keys.size == 0
+    if (!keys || keys.size == 0)
         keyName = name+"Id";
-        key = __domain_getproperty(doment.properties, keyName)
+        key = null
+        if (doment.properties)
+            key = __domain_getproperty(doment.properties, keyName)
+        end
         if !key 
             key = {name: keyName, type:"int", isIdentity: true, isKey: true}
             key.sqlType = mssql.sqlType(key)
         else
-            if (key.pIFace)
-                key.isKey = key.isKeyI
-                key.isIdentity = key.isIdentityI
-            else
-                key.isKey = true
-                key.isIdentity = true
-            end
+            key.isKey = true
+            key.isIdentity = true
         end
-        doment.properties = doment.properties | array.insert_at 0 key
+        doment.properties = doment?.properties | array.insert_at 0 key
     end
     
     ret doment
 end
     
+
+func __mssql_getkeys(name)
+# usage: mssql.getentitykeys(entity)
+# description: Get all keys for a given entity and creates one if not found    # example: |-
+# mssql.getentity("User")
+    keys = []
+    entity = domain.getentity(name);
+    ckeys = domain.getentitykeys(entity)
+    if (ckeys)
+        keys = array.add keys ckeys 
+    end
+    for iname in entity?.interfaces 
+        iface = domain.getinterface(iname)
+        if (iface?.useKey)
+            keys = array.add keys domain.getentitykeys(iface)
+        end
+    end 
+    # No keys found in entity or any interface being implemented 
+    # then add a default
+    if (!keys)
+        keyName = name+"Id";
+        key = {name: keyName, type:"int", isIdentity: true, isKey: true}
+        keys = array.add keys key
+    end
+    # "mssql.getentitykeys \n";entity;"\n";keys;"\n"
+    ret keys
+end
+
 
 func __mssql_getinterfaceproperties(item)
 # usage: mssql.getinterfaceproperties(item)
@@ -148,12 +190,11 @@ func __mssql_schemaentity(name)
     ret ts
 end
 
+
 func __mssql_primarykey(table, keys)
     pksql = "CONSTRAINT [PK_"+table+"_"+(keys | array.join "_")+"] PRIMARY KEY CLUSTERED("+(keys | array.join ",")+")"
     ret pksql
 end
-
-
 
 textrude.create_library this "mssql"
 }}
