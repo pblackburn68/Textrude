@@ -191,6 +191,14 @@ func __mssql_schemaentity(name)
 end
 
 
+func __mssql_default(prefix, prop)
+    default = ""
+    if (prop.default)
+        default = "CONSTRAINT DF_"+prefix+"_"+prop.name+" DEFAULT ("+prop.default+")"
+    end
+    ret default
+end
+
 func __mssql_primarykey(table, keys)
     pksql = "CONSTRAINT [PK_"+table+"_"+(keys | array.join "_")+"] PRIMARY KEY CLUSTERED("+(keys | array.join ",")+")"
     ret pksql

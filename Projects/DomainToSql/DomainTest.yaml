@@ -12,9 +12,11 @@ interfaces:
       type: IUser 
     - name: UpdatedDate
       type: datetime
+      default: GETDATE()
     - name: Created{key} 
-      type: IUser
+      type: IUser  
     - name: CreatedDate
+      default: GETDATE()
       type: datetime
 - name: IReference
   interfaces:
@@ -25,26 +27,31 @@ interfaces:
       length: 255
     - name: IsActive
       type: bool
-      default: 1
+      default: 1 
 entities:   
 - name: User        
   interfaces:          
-  - IUser:0
+  - IUser:0:true
   properties:  
-  - name: FirstName 
+  - name: Firstname 
     type: string 
-    length: 255
-  - name: Lastname
-    type: string
+    length: 512
+  - name: Lastname 
+    type: string 
+    length: 512
 - name: Address
   properties:
   - name: House 
     type: string  
+  - name: AddressType
+    type: AddressType
 - name: AddressType
   schema: Reference
   interfaces: 
   - IReference
-  
+  - IAudit
+ 
+
   
 
 
