@@ -5,15 +5,15 @@ func __domain_getentity(name)
 # example: |-
 # domain.getentity("User")
     #"Calling domain.getentity(";name;")\n"
-    doment = model.entities |
+    $doment = model.entities |
         array.filter @(do(p); ret p.name == name; end) |
         array.first  |
         utils.objectclone
-    if !doment
+    if !$doment
         "Unable to find entity [";name;"]\n"
         ret
     end
-    ret doment
+    ret $doment
 end
 
 
@@ -28,44 +28,50 @@ func __domain_getinterface(name)
 # domain.getinterface("IUser:0")
 # https://github.com/scriban/scriban/issues/386
     # "Calling domain.getinterface(";name;")\n"
-    aname = name | string.split ":"
-    if aname.size > 1
-       name = aname[0] 
+    $aname = name | string.split ":"
+    if $aname.size > 1
+       name = $aname[0] 
     end
-    iface = model.interfaces |
+    $iface = model.interfaces |
             array.filter @(do(p); ret p.name == name; end) |
             array.first |
             utils.objectclone
-    if !iface
-        "domain.getinterface(";name;"). Interface not found\n"
+    if !$iface
+        # "domain.getinterface(";name;"). Interface not found\n"
         ret
     end
-    if aname.size > 1
-        iface.position = aname[1]
-        if aname.size > 2
-          iface.useKey = aname[2]
+    if $aname.size > 1
+        $iface.position = $aname[1]
+        if $aname.size > 2
+          $iface.useKey = $aname[2]
         end
     end
-    ret iface
+    ret $iface
 end
 
 
 func __domain_getinterfacescsv(entity)
-    list = ""
-    name = ""
+# description: get a list of interfaces for an entity as a csv list
+# usage: domain.getinterfacescsv(entity)
+# params: entity - entity instance 
+# example: |-
+# e = domain.getinterface("IAudit")
+# ilist = domain.getinterfacescsv(e)
+    $list = ""
+    $name = ""
     for i in entity?.interfaces
-        name = i
-        aname = i | string.split ":"
-        if aname.size > 1
-            name = aname[0] 
+        $name = i
+        $aname = i | string.split ":"
+        if $aname.size > 1
+            $name = $aname[0] 
         end
-        list = list + name + ", " 
+        $list = $list + $name + ", " 
     end
-    if list != ''
-        list = string.remove_last list ","
-        list = ": "+list
+    if $list != ''
+        $list = string.remove_last $list ","
+        $list = ": "+$list
     end
-    ret list
+    ret $list
 end
 
 
@@ -75,8 +81,8 @@ func __domain_getinterfacepropertiesbyname(name)
 # example: |-
 # domain.getinterfacepropertiesbyname("IAudit")
     # "Calling domain.getinterfacepropertiesbyname(";name;")\n"
-    item = __domain_getinterface(name)
-    ret __domain_getinterfaceproperties(item)
+    $item = __domain_getinterface(name)
+    ret __domain_getinterfaceproperties($item)
 end
 
 
@@ -86,11 +92,11 @@ func __domain_getinterfaceproperties(item)
 # example: |-
 # domain.getinterfaceproperties("IAudit")
     # "Calling domain.getinterfaceproperties(";item;")\n"
-    props = [] 
+    $props = [] 
     for p in item?.properties
-        props = array.add props p 
+        $props = array.add $props p 
     end
-    ret props;
+    ret $props;
 end
     
 
@@ -102,13 +108,12 @@ func __domain_getkeys(name)
 # example: |-
 # domain.getkeys("User")
     # "Calling domain.getkeys(";name;")\n"
-    iface = __domain_getinterface(name)
-    keys = []
-    if iface
-        ret __domain_getentitykeys(iface)   
+    $iface = __domain_getinterface(name)
+    if $iface
+        ret __domain_getentitykeys($iface)   
     else
-        entity = __domain_getentity(name)
-        ret __domain_getentitykeys(entity)
+        $entity = __domain_getentity(name)
+        ret __domain_getentitykeys($entity)
     end
 end
 
@@ -119,13 +124,13 @@ func __domain_getentitykeys(entity)
 # example: |-
 # e = domain.getentitykeys("User")
     # "Calling domain.getentitykeys(";entity;")\n"
-    keys = []
+    $keys = []
     if entity
-        keys = entity.properties |
+        $keys = entity.properties |
             array.filter @(do(p); ret p.isKey == true; end) |
             utils.objectclone
     end
-    ret keys
+    ret $keys ?? []
 end
 
 
@@ -136,16 +141,16 @@ func __domain_getchildkeys(type, prefix = null)
 # eg domain.getchildkeys("IUser", "Primary{key}") would map IUser to property named PrimaryUserId
 # keys = domain.getchildkeys("User")
     # "Calling domain.getchildkeys(";type;",";prefix;")\n"
-    keys = __domain_getkeys(type)
+    $keys = __domain_getkeys(type)
     # Mark all the child keys as not an identity as they are link fields eg. foreign keys
-    for k in keys
+    for $k in $keys
         if prefix
-            k.name = string.replace prefix "{key}" k.name
+            $k.name = string.replace prefix "{key}" $k.name
         end
-        k.isIdentity = false;
-        k.isKey = false;
+        $k.isIdentity = false;
+        $k.isKey = false;
     end
-    ret keys
+    ret $keys
 end
 
 
@@ -156,8 +161,8 @@ func __domain_getkeynames(entity)
 # e = domain.getentity("User")
 # keys = domain.getkeynames(e)
 # outputs UserId
-    keys = __domain_getentitykeys(entity)
-    ret keys | array.map "name" 
+    $keys = __domain_getentitykeys(entity)
+    ret $keys | array.map "name" 
 end
 
 
@@ -167,19 +172,19 @@ func __domain_getschemanames(model)
 # example: |-
 # snames = domain.getschemanames(model)
 # outputs UserId
-    schemas = model.entities |
+    $schemas = model.entities |
               array.filter @(do(p); ret p.schema != null; end) |
               array.map "schema" 
-    ret schemas
+    ret $schemas
 end
 
 
 func __domain_getproperty(properties, name)
     # "Calling domain.getchilgetproperty(";properties;",";name;")\n"
-    prop = properties | 
+    $prop = properties | 
            array.filter @(do(p); ret p.name == name; end) |
            array.first
-    ret prop
+    ret $prop
 end      
 
 textrude.create_library this "domain"

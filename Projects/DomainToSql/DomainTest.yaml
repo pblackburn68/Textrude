@@ -36,7 +36,7 @@ entities:
   - name: Firstname 
     type: string 
     length: 512
-  - name: Lastname 
+  - name: Lastname
     type: string 
     length: 512
 - name: Address
