@@ -1,0 +1,85 @@
+{{
+
+func __csharp_getentity(name)
+# usage: csharp.getentity(name)
+# description: Get a named entity from the domain model with C# specific attributes eg cstype
+# example: |-
+# csharp.getentity("User")
+    $doment = domain.getentity(name)
+    if (!$doment)
+        ret
+    end
+
+    # set default csType for all properties
+    for domep in $doment?.properties
+        domep.csType = csharp.csType(domep)
+    end 
+
+    for $iname in $doment?.interfaces  
+        $iface = domain.getinterface($iname)
+        # "Adding interface properties ";iface;"-";doment.properties?.size;"\n"
+        $ipos = $iface?.position ?? 1
+        # for each interface property in the named interface
+        # set the corresponding sql type and add to the cloned object
+        for domip in domain.getinterfaceproperties($iface)
+            $ptype = csharp.csType(domip)
+            domip.csType = $ptype
+            if (string.starts_with($ptype,"I"))
+                $ptype =  $ptype | string.slice 1
+            end
+            domip.name = domip.name  | string.replace "{key}" $ptype
+            # if position = 0 then insert interface properties into the beginning of the property array
+            # otherwise append them 
+            if $ipos == 0
+                $fidx = 0
+            else
+                $fidx = $doment.properties?.size ?? 0
+            end
+            # "Adding interface property ";domip;"\n"
+            $doment.properties = $doment.properties | array.insert_at $fidx++ domip
+        end
+    end
+    ret $doment
+end
+
+
+func __csharp_csType(property)
+# usage: csharp.csType(property)
+# description: determine C# data type from a Property object
+# where Property object has the following properties type, length, precision, scale, isIdentity
+# example: |-
+# csharp.csType({type: "int32"})
+# int
+    if ! property
+        ret
+    end
+    $cstype = property.type
+    case property.type | string.downcase
+        when "int", "int32"
+            $cstype = "int"
+        when "string"
+            $cstype = "string"
+        when "decimal","numeric","float"
+            $cstype = "decimal"
+        when "bool","boolean","bit"
+            $cstype = "bool"
+        when "date"
+            $cstype = "DateOnly"
+        when "datetime"
+            $cstype = "DateTime"
+        when "long","int64"
+            $cstype = "long"
+        when "short","int16"
+            $cstype = "short"
+        when "short","int16"
+            $cstype = "short"
+        when "binary"
+            $cstype= "byte[]"
+        when "time"
+            $cstype = "TimeOnly"
+    end
+    ret $cstype
+end
+
+textrude.create_library this "csharp"
+}}

@@ -12,7 +12,7 @@ end
 func __utils_objectclone(tobj, clone = null)
 # usage: utils.objectclone(object, clone)
 # description: deep copy of an object and arrays 
-# clone is passed when calling recursivelyoptional 
+# clone is passed when calling recursively optional 
 # example: |-
 # domain.getentity("User") | utils.object.clone
     if !tobj

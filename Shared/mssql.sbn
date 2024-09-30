@@ -144,7 +144,7 @@ end
 
 
 func __mssql_sqlType(property)
-# usage: db.sqltype (property)
+# usage: mssql.sqltype(property)
 # description: determine sql data type from a Property object
 # where Property object has the following properties type, length, precision, scale, isIdentity
 # example: 1-
@@ -173,7 +173,9 @@ func __mssql_sqlType(property)
         when "long","int64"
             $sdbtype = "BIGINT"
         when "short","int16"
-            $sdbtype = "TINYINT"
+            $sdbtype = "SMALLINT"
+        when "byte" 
+            $sdbtype = "TINYINT"   
         when "binary"
             $sdbtype= "VARBINARY("+$len+")"
     end

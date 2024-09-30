@@ -2,44 +2,22 @@
 include "domain.sbn"
 include "mssql.sbn"
 include "utilities.sbn"
-  
+include "csharp.sbn"
 utils.commentblock("Generate a SQL script based on a yaml File DomainTest.yaml
 Purpose: Quick example to demonstrate the power of scriban")
+# Script to generate entity creation
+include "mssql.entities.sbn"
 }}
-USE {{model.name}}
-SET QUOTED_IDENTIFIER, ARITHABORT, ANSI_NULLS, ANSI_WARNINGS ON
-GO 
-{{for s in domain.getschemanames(model)}}
-IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{{s}}')
-BEGIN
-   EXEC('CREATE SCHEMA [{{s}}] AUTHORIZATION [dbo]');
-END{{~end}}      
-GO
-{{
-for e in model.entities 
-    schema = e.schema ? e.schema : "dbo"  
-}} 
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OB JECT_ID(N'[{{schema}}].[{{e.name}}]') AND type IN (N'U'))
-BEGIN 
-    CREATE TABLE [{{schema}}].[{{e.name}}]
-    (
-    {{~ dbe = mssql.getentity(e.name) 
-    for p in dbe?.properties~}} 
-        [{{ p.name }}] {{p.sqlType}} {{mssql.default(e.name,p)}},     
-    {{~end~}} 
-        {{mssql.primarykey(e.name, domain.getkeynames(dbe))}}
-    )   
-END 
-{{end}}
 {{capture cs}} 
 // File generated from scriban model
 namespace {{model.name}} {
-    {{for e in model.entities}}
+    {{for e in model.entities}} 
 public class {{e.name}} {{domain.getinterfacescsv(e)}} 
 {
-    {{~  
+    {{~
+    dbe = csharp.getentity(e.name) 
     for p in dbe?.properties~}} 
-        public {{ p.type }} {{ p.name }} {get;set;}       
+        public {{ p.csType }} {{ p.name }} {get;set;}       
     {{~end~}}  
 }
 {{  end}}
