@@ -1,0 +1,40 @@
+{
+  "Version": 1,
+  "Description": "",
+  "EngineInput": {
+    "Definitions": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "IncludePaths": [
+      "d:\\development\\mygithub\\textrude\\shared\\"
+    ],
+    "Models": [
+      {
+        "Format": 2,
+        "Text": "name: ObjectBroker\r\ninterfaces: \r\n- name: IUser\r\n  properties:\r\n  - name: UserId\r\n    type: int\r\n    isIdentity: true\r\n    isKey: true\r\n- name: IAudit\r\n  properties:\r\n    - name: Updated{key}\r\n      type: IUser \r\n    - name: UpdatedDate\r\n      type: datetime\r\n      default: GETDATE()\r\n    - name: Created{key} \r\n      type: IUser  \r\n    - name: CreatedDate\r\n      default: GETDATE()\r\n      type: datetime\r\n- name: IReference\r\n  interfaces:\r\n  - IAudit\r\n  properties:\r\n    - name: Description\r\n      type: string\r\n      length: 255\r\n    - name: IsActive\r\n      type: bool\r\n      default: 1 \r\nentities:   \r\n- name: Domain        \r\n  interfaces:          \r\n  - IAudit\r\n  properties:  \r\n  - name: Name \r\n    type: string \r\n    length: 128\r\n  - name: DomainType\r\n    type: DomainType\r\n- name: DomainType\r\n  schema: Reference\r\n  interfaces: \r\n  - IReference\r\n  - IAudit\r\n- name: EntityType\r\n  schema: Reference\r\n  interfaces: \r\n  - IReference\r\n  - IAudit\r\n  properties:  \r\n  - name: DomainType \r\n    type: DomainType\r\n- name: Entity \r\n  interfaces:          \r\n  - IAudit\r\n  properties:  \r\n  - name: Name \r\n    type: string \r\n    length: 128\r\n  - name: Domain\r\n    type: Domain\r\n  \r\n\r\n\r\n",
+        "Path": "D:\\Development\\MyGitHub\\Textrude\\Projects\\ObjectBroker\\ObjectBroker.yaml",
+        "Name": "model"
+      }
+    ],
+    "Template": "{{\r\ninclude \u0022domain.sbn\u0022\r\ninclude \u0022mssql.sbn\u0022\r\ninclude \u0022utilities.sbn\u0022\r\ninclude \u0022csharp.sbn\u0022\r\nutils.commentblock(\u0022Generate a SQL script based on a yaml File DomainTest.yaml\r\nPurpose: Quick example to demonstrate the power of scriban\u0022)\r\n# Script to generate entity creation\r\ninclude \u0022mssql.entities.sbn\u0022\r\n}}\r\n{{capture cs}} \r\n// File generated from scriban model\r\nnamespace {{model.name}} {\r\n    {{for e in model.entities}} \r\npublic class {{e.name}} {{domain.getinterfacescsv(e)}} \r\n{\r\n    {{~\r\n    dbe = csharp.getentity(e.name) \r\n    for p in dbe?.properties~}} \r\n        public {{ p.csType }} {{ p.name }} {get;set;}       \r\n    {{~end~}}  \r\n}\r\n{{  end}}\r\n}\r\n{{end}}\r\n{{capture ts}}\r\n\r\n{{end}}  \r\n  ",
+    "TemplatePath": "D:\\Development\\MyGitHub\\Textrude\\Projects\\ObjectBroker\\ObjectBrokerMain.sbn"
+  },
+  "OutputControl": {
+    "Outputs": [
+      {
+        "Format": "",
+        "Name": "output",
+        "Path": ""
+      },
+      {
+        "Format": "",
+        "Name": "cs",
+        "Path": ""
+      }
+    ]
+  }
+}

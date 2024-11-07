@@ -1,0 +1,65 @@
+name: ObjectBroker
+interfaces: 
+- name: IUser
+  properties:
+  - name: UserId
+    type: int
+    isIdentity: true
+    isKey: true
+- name: IAudit
+  properties:
+    - name: Updated{key}
+      type: IUser 
+    - name: UpdatedDate
+      type: datetime
+      default: GETDATE()
+    - name: Created{key} 
+      type: IUser  
+    - name: CreatedDate
+      default: GETDATE()
+      type: datetime
+- name: IReference
+  interfaces:
+  - IAudit
+  properties:
+    - name: Description
+      type: string
+      length: 255
+    - name: IsActive
+      type: bool
+      default: 1 
+entities:   
+- name: Domain        
+  interfaces:          
+  - IAudit
+  properties:  
+  - name: Name 
+    type: string 
+    length: 128
+  - name: DomainType
+    type: DomainType
+- name: DomainType
+  schema: Reference
+  interfaces: 
+  - IReference
+  - IAudit
+- name: EntityType
+  schema: Reference
+  interfaces: 
+  - IReference
+  - IAudit
+  properties:  
+  - name: DomainType 
+    type: DomainType
+- name: Entity 
+  interfaces:          
+  - IAudit
+  properties:  
+  - name: Name 
+    type: string 
+    length: 128
+  - name: Domain
+    type: Domain
+  
+
+
