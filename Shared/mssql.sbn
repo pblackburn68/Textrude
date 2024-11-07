@@ -20,9 +20,8 @@ func __mssql_getentity(name)
     $props = []
     # set default sqltype for all properties
     for $domep in $doment?.properties
-        $domep.sqlType = mssql.sqlType($domep)
-        # No matching sql type so assuming of type class
-        if (!$domep.sqlType)
+        # No match to any simple yaml model proprty type then domain.getentity assigns isObject to true
+        if ($domep.isObject)
             # Get child keys
             $ckeys = domain.getchildkeys($domep.type)
             # "Keys";$ckeys[0];"\n"
@@ -36,6 +35,7 @@ func __mssql_getentity(name)
                 $props = array.add $props $key
             end
         else
+            $domep.sqlType = mssql.sqlType($domep)
             $props = array.add $props $domep
         end        
     end 
@@ -96,7 +96,8 @@ end
 
 func __mssql_getkeys(name)
 # usage: mssql.getentitykeys(entity)
-# description: Get all keys for a given entity and creates one if not found    # example: |-
+# description: Get all keys for a given entity and creates one if not found    
+# example: |-
 # mssql.getentity("User")
     $keys = []
     $entity = domain.getentity(name);
@@ -219,6 +220,18 @@ end
 func __mssql_primarykey(table, keys)
     $pksql = "CONSTRAINT [PK_"+table+"_"+(keys | array.join "_")+"] PRIMARY KEY CLUSTERED("+(keys | array.join ",")+")"
     ret $pksql
+end
+
+func __mssql_getschemanames(model)
+# usage: domain.getschemanames(model)
+# description: get all schema names used in the domain model 
+# example: |-
+# snames = domain.getschemanames(model)
+# outputs UserId
+    $schemas = model.entities |
+                array.filter @(do(p); ret p.schema != null; end) |
+                array.map "schema" 
+    ret $schemas
 end
 
 textrude.create_library this "mssql"

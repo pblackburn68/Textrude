@@ -39,6 +39,8 @@ entities:
   - name: Lastname
     type: string 
     length: 512
+  - name: DOB
+    type: date
 - name: Address
   properties:
   - name: House 

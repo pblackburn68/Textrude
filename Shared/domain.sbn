@@ -13,6 +13,7 @@ func __domain_getentity(name)
         "Unable to find entity [";name;"]\n"
         ret
     end
+    __domain_setEntityIsObject($doment)
     ret $doment
 end
 
@@ -46,6 +47,7 @@ func __domain_getinterface(name)
           $iface.useKey = $aname[2]
         end
     end
+    __domain_setEntityIsObject($iface)
     ret $iface
 end
 
@@ -165,20 +167,6 @@ func __domain_getkeynames(entity)
     ret $keys | array.map "name" 
 end
 
-
-func __domain_getschemanames(model)
-# usage: domain.getschemanames(model)
-# description: get all schema names used in the domain model 
-# example: |-
-# snames = domain.getschemanames(model)
-# outputs UserId
-    $schemas = model.entities |
-              array.filter @(do(p); ret p.schema != null; end) |
-              array.map "schema" 
-    ret $schemas
-end
-
-
 func __domain_getproperty(properties, name)
     # "Calling domain.getchilgetproperty(";properties;",";name;")\n"
     $prop = properties | 
@@ -186,6 +174,36 @@ func __domain_getproperty(properties, name)
            array.first
     ret $prop
 end      
+
+func __domain_setEntityIsObject(entity)
+    entity.properties = array.each entity.properties @__domain_setIsObject
+end
+
+func __domain_setIsObject(property)
+# usage: domain.setSimpleType(property)
+# description: Set a simple type based on yaml model type
+# eg. provide a method to determine if the type is a simple type, sttring, number, date etc or a child object type
+# example: 1-
+# db.sqltype({type: "int32", isIdentity: true})
+# INT IDENTITY (1,1) NOT NULL
+    if ! property
+        ret
+    end
+    $types = [
+        "int", "int32", 
+        "string",
+        "decimal","numeric","float",
+        "bool","boolean","bit",
+        "date","datetime",
+        "long","int64",
+        "short","int16",
+        "byte",
+        "binary"
+    ]
+    property.isObject = !array.contains($types, property.type)
+    ret property
+end
+    
 
 textrude.create_library this "domain"
 }}

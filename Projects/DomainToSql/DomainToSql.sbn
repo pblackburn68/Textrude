@@ -9,7 +9,7 @@ Purpose: Quick example to demonstrate the power of scriban")
 include "mssql.entities.sbn"
 }}
 {{capture cs}} 
-// File generated from scriban model
+// Class file generated from scriban model
 namespace {{model.name}} {
     {{for e in model.entities}} 
 public class {{e.name}} {{domain.getinterfacescsv(e)}} 
