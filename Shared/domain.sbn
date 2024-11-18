@@ -95,8 +95,13 @@ func __domain_getinterfaceproperties(item)
 # domain.getinterfaceproperties("IAudit")
     # "Calling domain.getinterfaceproperties(";item;")\n"
     $props = [] 
-    for p in item?.properties
-        $props = array.add $props p 
+    for $p in item?.properties
+        __domain_setIsObject($p)
+        if $p.isObject
+            $props = array.add_range $props __domain_getinterfacepropertiesbyname($p.type)
+        else
+            $props = array.add $props $p 
+        end
     end
     ret $props;
 end
@@ -144,6 +149,8 @@ func __domain_getchildkeys(type, prefix = null)
 # keys = domain.getchildkeys("User")
     # "Calling domain.getchildkeys(";type;",";prefix;")\n"
     $keys = __domain_getkeys(type)
+    # "domain.getchildkeys()";$keys;"\n"
+    
     # Mark all the child keys as not an identity as they are link fields eg. foreign keys
     for $k in $keys
         if prefix

@@ -5,14 +5,14 @@ include "domain.sbn"
 func __mssql_getentity(name)
 # usage: mssql.getentity(name)
 # description: Get a named entity from the domain model with sql server specific attributes eg SqlType
-#  also expands all interface properties
+# also expands all interface properties
 # example: |-
 # mssql.getentity("User")
     $doment = domain.getentity(name)
     if (!$doment)
         ret
     end
-
+    # "mssql.getentity(";name;")";$doment;"\n"
     #if (!$doment.properties) 
     #    "No properties defined on type ";name;"\n"
     #end
@@ -47,24 +47,23 @@ func __mssql_getentity(name)
         $iface = __domain_getinterface($iname)
         # "Adding interface properties ";iface;"-";doment.properties?.size;"\n"
         $ipos = $iface?.position ?? 1
+        # if position = 0 then insert interface properties into the beginning of the property array
+        # otherwise append them 
+        if $ipos == 0
+            $fidx = 0
+        else
+            $fidx = $doment.properties?.size ?? 0
+        end
         # for each interface property in the named interface
         # set the corresponding sql type and add to the cloned object
         for $domip in __mssql_getinterfaceproperties($iface)
-            
             # Set indicator this is a top level prime interface
             if !$iface.useKey 
                 $domip.isKey = false
                 $domip.isIdentity = false
             end
-            $domip.sqlType = mssql.sqlType($domip)
-            # if position = 0 then insert interface properties into the beginning of the property array
-            # otherwise append them 
-            if $ipos == 0
-                $fidx = 0
-            else
-                $fidx = $doment.properties?.size ?? 0
-            end
-            # "Adding interface property ";domip;"\n"
+            $domip.sqlType = mssql.sqlType($domip)    
+            # "Adding interface property ";$domip;" @ ";$fidx;"\n"
             $doment.properties = $doment.properties | array.insert_at $fidx++ $domip
         end
     end
@@ -134,7 +133,7 @@ func __mssql_getinterfaceproperties(item)
         # "Interface property ";p.name;" ";p.type;"sqltype=";db.sqlType(p);"\n"
         # Using null sqlType to determine if this is an object type
         # if this is an object type then just get the child objects keys
-        if mssql.sqlType($p) == null
+        if $p.isObject
             $props = array.add_range $props __domain_getchildkeys($p.type, $p.name)
         else
             $props = array.add $props $p 
