@@ -121,6 +121,12 @@ func __mssql_getkeys(name)
     ret $keys
 end
 
+
+func __mssql_getfkentities(name)
+    $fkents = []
+    $entity = domain.getentity(name);
+    
+end
   
 func __mssql_getinterfaceproperties(item)
 # usage: mssql.getinterfaceproperties(item)
@@ -154,7 +160,7 @@ func __mssql_sqlType(property)
         ret
     end
     $sdbtype = null
-    $len = property.length ?? 50
+    $len = property.size ?? 50
     case property.type | string.downcase
         when "int", "int32"
             $sdbtype = "INT"
@@ -228,7 +234,7 @@ func __mssql_getschemanames(model)
 # snames = domain.getschemanames(model)
 # outputs UserId
     $schemas = model.entities |
-                array.filter @(do(p); ret p.schema != null; end) |
+                array.filter @(do(p); ret p.schema != null && string.downcase(p.schema) != "dbo"; end) |
                 array.map "schema" 
     ret $schemas
 end

@@ -1,20 +1,27 @@
 name: FFS
 interfaces: 
-- name: IUser
+- name: IAuditUser
+  baseType: User
   properties:
   - name: UserId
     type: int
     isIdentity: true
     isKey: true
+  - name: FirstName
+    type: string
+    size: 128
+  - name: Lastname
+    type: string 
+    size: 128
 - name: IAudit
   properties:
     - name: Updated{key}
-      type: IUser 
+      type: IAuditUser 
     - name: UpdatedDate
       type: datetime
       default: GETDATE()
     - name: Created{key} 
-      type: IUser  
+      type: IAuditUser  
     - name: CreatedDate
       default: GETDATE()
       type: datetime
@@ -24,27 +31,24 @@ interfaces:
   properties:
     - name: Description
       type: string
-      length: 255
+      size: 255
     - name: IsActive
       type: bool
       default: 1 
 entities:   
 - name: User        
   interfaces:          
-  - IUser:0:true
+  - IAuditUser:0:true
   properties:  
-  - name: Firstname 
+  - name: Email
     type: string 
-    length: 512
-  - name: Lastname
-    type: string 
-    length: 512
-  - name: DOB
-    type: date
+    size: 512
 - name: Address
   properties:
   - name: House 
     type: string  
+  - name: User
+    type: User
   - name: AddressType
     type: AddressType
 - name: AddressType
@@ -52,6 +56,53 @@ entities:
   interfaces: 
   - IReference
   - IAudit
+- name: Project
+  interfaces: 
+  - IAudit
+  properties:
+  - name: Name 
+    type: string
+    size: 255  
+  - name: Description
+    type: string
+    size: 1024
+    isNullable: true
+  - name: Comments
+    type: string
+    size: 4096
+    isNullable: true
+  - name: Link
+    type: string
+    size: 2048
+    isNullable: true
+  - name: IsActive
+    type: bool
+    default: 1
+- name: Epic
+  interfaces: 
+  - IAudit
+  properties:
+  - name: Project 
+    type: Project 
+  - name: Name
+    type: string
+    size: 255
+  - name: Description
+    type: string
+    size: 1024
+    isNullable: true
+  - name: Comments
+    type: string
+    size: 4096
+    isNullable: true
+  - name: Link
+    type: string
+    size: 2048
+    isNullable: true
+  - name: IsActive
+    type: bool
+    default: 1
+
  
 
   

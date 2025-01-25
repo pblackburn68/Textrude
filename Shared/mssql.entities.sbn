@@ -17,7 +17,7 @@ BEGIN
     (
     {{~ dbe = mssql.getentity(e.name) 
     for p in dbe?.properties~}} 
-        [{{ p.name }}] {{p.sqlType}} {{~mssql.default(e.name,p)}},     
+        [{{ p.name }}] {{p.sqlType}}{{ p.default ? " "+mssql.default(e.name,p) : "" }},     
     {{~end~}} 
         {{mssql.primarykey(e.name, domain.getkeynames(dbe))}}
     )   

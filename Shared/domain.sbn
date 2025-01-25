@@ -13,7 +13,7 @@ func __domain_getentity(name)
         "Unable to find entity [";name;"]\n"
         ret
     end
-    __domain_setEntityIsObject($doment)
+    __domain_setEntityObjectProperties($doment)
     ret $doment
 end
 
@@ -47,7 +47,7 @@ func __domain_getinterface(name)
           $iface.useKey = $aname[2]
         end
     end
-    __domain_setEntityIsObject($iface)
+    __domain_setEntityObjectProperties($iface)
     ret $iface
 end
 
@@ -96,7 +96,7 @@ func __domain_getinterfaceproperties(item)
     # "Calling domain.getinterfaceproperties(";item;")\n"
     $props = [] 
     for $p in item?.properties
-        __domain_setIsObject($p)
+        __domain_setPropertyIsObject($p)
         if $p.isObject
             $props = array.add_range $props __domain_getinterfacepropertiesbyname($p.type)
         else
@@ -141,6 +141,31 @@ func __domain_getentitykeys(entity)
 end
 
 
+func __domain_getchildren(name)
+# usage: domain.__domain_getchildren(name)
+# description: get all properties that are themselves entities ie child objects/entites for a named entity
+# children = domain.__domain_getentitychildren("Address")
+    $entity = __domain_getentity(name)
+    ret __domain_getentitychildren($entity) 
+end
+
+
+func __domain_getentitychildren(entity)
+# usage: domain.__domain_getentitychildren(entity)
+# description: get all properties that are themselves entities ie child objects/entites from a 
+# previously loaded entity
+# e = domain.getentity("Address")
+# children = domain.__domain_getentitychildren(e)
+    $children = []
+    if entity
+        $children = entity.properties |
+            array.filter @(do(p); ret p.isObject == true; end) |
+            utils.objectclone
+    end
+    ret $children ?? []
+end
+
+
 func __domain_getchildkeys(type, prefix = null)
 # usage: domain.getchildkeys(type,prefix)
 # description: get all key properties for a given child property type
@@ -182,11 +207,11 @@ func __domain_getproperty(properties, name)
     ret $prop
 end      
 
-func __domain_setEntityIsObject(entity)
-    entity.properties = array.each entity.properties @__domain_setIsObject
+func __domain_setEntityObjectProperties(entity)
+    entity.properties = array.each entity.properties @__domain_setPropertyIsObject
 end
 
-func __domain_setIsObject(property)
+func __domain_setPropertyIsObject(property)
 # usage: domain.setSimpleType(property)
 # description: Set a simple type based on yaml model type
 # eg. provide a method to determine if the type is a simple type, sttring, number, date etc or a child object type

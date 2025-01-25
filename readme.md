@@ -24,9 +24,10 @@ classDiagram
   class property{
     +string: name
     +int: type
-    +int: length
+    +int: sizeS
     +bool: isIdentity
     +bool: isKey
+    +bool: isObject
   }
   class entity{
     +string: name
