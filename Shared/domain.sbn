@@ -158,11 +158,13 @@ func __domain_getentitychildren(entity)
 # children = domain.__domain_getentitychildren(e)
     $children = []
     if entity
-        $children = entity.properties |
-            array.filter @(do(p); ret p.isObject == true; end) |
-            utils.objectclone
+        for $p in entity.properties
+            if $p.isObject
+                $children = array.add $children domain.getentity($p.type)
+            end
+        end
     end
-    ret $children ?? []
+    ret $children
 end
 
 
