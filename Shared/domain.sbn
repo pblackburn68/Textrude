@@ -88,14 +88,14 @@ func __domain_getinterfacepropertiesbyname(name)
 end
 
 
-func __domain_getinterfaceproperties(item)
-# usage: domain.getinterfaceproperties(item)
+func __domain_getinterfaceproperties(entity)
+# usage: domain.getinterfaceproperties(entity)
 # description: get all interface properties for an entity
 # example: |-
 # domain.getinterfaceproperties("IAudit")
-    # "Calling domain.getinterfaceproperties(";item;")\n"
+    # "Calling domain.getinterfaceproperties(";entity;")\n"
     $props = [] 
-    for $p in item?.properties
+    for $p in entity?.properties
         __domain_setPropertyIsObject($p)
         if $p.isObject
             $props = array.add_range $props __domain_getinterfacepropertiesbyname($p.type)
@@ -137,7 +137,22 @@ func __domain_getentitykeys(entity)
             array.filter @(do(p); ret p.isKey == true; end) |
             utils.objectclone
     end
-    ret $keys ?? []
+    # No keys found in entity or any interface being implemented 
+    # then add a default
+    if ($keys.size == 0 )
+        $keyName = entity.name+"Id";
+        $key = {name: $keyName, type:"int", isIdentity: true, isKey: true}
+        $keys = array.add $keys $key
+    end
+    
+    for $iname in $entity?.interfaces 
+        $iface = domain.getinterface($iname)
+        if ($iface?.useKey)
+            $keys = array.add $keys domain.getentitykeys($iface)
+        end
+    end
+
+    ret $keys 
 end
 
 
@@ -158,7 +173,12 @@ func __domain_getentitychildren(entity)
 # children = domain.__domain_getentitychildren(e)
     $children = []
     if entity
-        for $p in entity.properties
+        for $p in entity?.properties
+            if $p.isObject
+                $children = array.add $children domain.getentity($p.type)
+            end
+        end
+        for $p in entity?.interfaces 
             if $p.isObject
                 $children = array.add $children domain.getentity($p.type)
             end

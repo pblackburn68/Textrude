@@ -98,27 +98,9 @@ func __mssql_getkeys(name)
 # description: Get all keys for a given entity and creates one if not found    
 # example: |-
 # mssql.getentity("User")
-    $keys = []
     $entity = domain.getentity(name);
     $ckeys = domain.getentitykeys($entity)
-    if ($ckeys)
-        $keys = array.add $keys $ckeys 
-    end
-    for $iname in $entity?.interfaces 
-        $iface = domain.getinterface($iname)
-        if ($iface?.useKey)
-            $keys = array.add $keys domain.getentitykeys($iface)
-        end
-    end 
-    # No keys found in entity or any interface being implemented 
-    # then add a default
-    if ($keys.size == 0 )
-        $keyName = name+"Id";
-        $key = {name: $keyName, type:"int", isIdentity: true, isKey: true}
-        $keys = array.add $keys $key
-    end
-    # "mssql.getentitykeys ";$entity;" Keys->";$keys;"\n"
-    ret $keys
+    ret $ckeys
 end
 
 
