@@ -7,13 +7,19 @@ utils.commentblock("Generate a SQL script based on a yaml File DomainTest.yaml
 Purpose: Quick example to demonstrate the power of scriban")
 # Script to generate entity creation
 # include "mssql.entities.sbn"
-
-e = domain.getchildren("Epic")
-"\n";e
-for c in e 
-    "\n";c.name;
+name = "Epic"
+me = mssql.getentity(name)
+children = mssql.getchildren(name)
+"\nChildren ";children 
+for c in children 
+    mkeys = domain.getkeys(c.name) | array.map "name" | array.join ","
+    "\nKeys ";mkeys
+}} 
+ALTER TABLE {{me.schema}}.{{me.name}} ADD CONSTRAINT FK_{{me.schema}}_{{me.name}}_{{c.schema}}_{{c.name}}
+    FOREIGN KEY {{c.schema}}.{{c.name}}({{mkeys}})
+{{ 
 end
-}}
+}} 
 {{capture cs}} 
 // File generated from scriban model
 namespace {{model.name}} {

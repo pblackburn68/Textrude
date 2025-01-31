@@ -10,7 +10,7 @@ func __domain_getentity(name)
         array.first  |
         utils.objectclone
     if !$doment
-        "Unable to find entity [";name;"]\n"
+        "\ndomain.getentity(\"";name;"\")\nError: Unable to find entity\n"
         ret
     end
     __domain_setEntityObjectProperties($doment)
@@ -108,10 +108,8 @@ end
     
 
 func __domain_getkeys(name)
-# usage: domain.getkeys(name,prefix)
-# description: get all key properties for an entity by name name, 
-# using an optional {key} replacement prefix,
-# if type is an object type then {key} will be the key field from the object type
+# usage: domain.getkeys(name)
+# description: get all key properties for an entity by name 
 # example: |-
 # domain.getkeys("User")
     # "Calling domain.getkeys(";name;")\n"
@@ -145,7 +143,7 @@ func __domain_getentitykeys(entity)
         $keys = array.add $keys $key
     end
     
-    for $iname in $entity?.interfaces 
+    for $iname in entity?.interfaces 
         $iface = domain.getinterface($iname)
         if ($iface?.useKey)
             $keys = array.add $keys domain.getentitykeys($iface)
@@ -175,12 +173,12 @@ func __domain_getentitychildren(entity)
     if entity
         for $p in entity?.properties
             if $p.isObject
-                $children = array.add $children domain.getentity($p.type)
+                $children = array.add $children {name: $p.name, entity: domain.getentity($p.type)}
             end
         end
         for $p in entity?.interfaces 
             if $p.isObject
-                $children = array.add $children domain.getentity($p.type)
+                $children = array.add $children {name: $p.name, entity:domain.getentity($p.type) }
             end
         end
     end

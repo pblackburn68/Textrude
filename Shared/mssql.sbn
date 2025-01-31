@@ -88,21 +88,46 @@ func __mssql_getentity(name)
         end
         $doment.properties = $doment?.properties | array.insert_at 0 $key
     end
-    
+    if !$doment.schema
+        $doment.schema = "dbo"
+    end
     ret $doment
 end
     
 
 func __mssql_getkeys(name)
-# usage: mssql.getentitykeys(entity)
-# description: Get all keys for a given entity and creates one if not found    
+# usage: mssql.getkeys(name)
+# description: Get all keys for a given named entity 
 # example: |-
 # mssql.getentity("User")
-    $entity = domain.getentity(name);
-    $ckeys = domain.getentitykeys($entity)
-    ret $ckeys
+    ret domain.getkeys(name)
 end
 
+
+func __mssql_getchildren(name)
+# usage: mssql.getchildren(name)
+# description: get all properties that are themselves entities ie child objects/entites for a named entity
+# children = mssql.getentitychildren("Address")
+    $e = domain.getentity(name)
+    ret __mssql_getentitychildren($e)
+end
+    
+    
+func __mssql_getentitychildren(entity)
+# usage: mssql.getentitychildren(entity)
+# description: get all properties that are themselves entities ie child objects/entites from a 
+# previously loaded entity
+# e = mssql.getentity("Address")
+# children = domain.__domain_getentitychildren(e)
+    $children = domain.getentitychildren(entity)
+    for $child in $children
+        if !$child.entity.schema
+            $child.entity.schema = "dbo"
+        end
+    end
+    ret $children
+end
+    
 
 func __mssql_getfkentities(name)
     $fkents = []
@@ -176,11 +201,13 @@ func __mssql_sqlType(property)
     ret $sdbtype
 end
 
+
+
 func __mssql_schemaentity(name)
-# usage: db.schemaentity(fullname)
-# description: parse schema.entityname to object with Schema and Entity parts
+# usage: mssql.schemaentity(fullname)
+# description: Helper function to parse schema.entityname to object with Schema and Entity properties
 # example: |-
-# db.schemaentity("Reference.Test")
+# mssql.schemaentity("Reference.Test")
 # {Schema: "Reference", Entity: "Test"}
     $parts = name | string.split "."
     $ts = {}

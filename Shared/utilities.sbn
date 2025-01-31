@@ -18,34 +18,34 @@ func __utils_objectclone(tobj, clone = null)
     if !tobj
         ret
     end
-    ttype = object.typeof tobj
+    $ttype = object.typeof tobj
     #"objectclone(";tobj;") of type ";ttype;"\n"
-    if ttype == "object"
+    if $ttype == "object"
         if !clone
             clone = {}
         end
-        for key in tobj | object.keys
+        for $key in tobj | object.keys
             #"objectclone: ";key;" type ";object.typeof tobj[key];"\n"
-            ctype = object.typeof tobj[key]
-            if ctype== "array" || ctype == "object"
+            $ctype = object.typeof tobj[$key]
+            if $ctype== "array" || $ctype == "object"
                 #"objectclone recurse(";tobj;") of type ";ttype;"\n"
-                clone[key] = __utils_objectclone(tobj[key])
+                clone[$key] = __utils_objectclone(tobj[$key])
             else
-                clone[key] = tobj[key]
+                clone[$key] = tobj[$key]
             end
         end
         ret clone
-    else if ttype == "array" || ttype == "iterator"
+    else if $ttype == "array" || $ttype == "iterator"
         if !clone
             clone = []
         end
-        for aitem in tobj
-            atype = object.typeof aitem
+        for $aitem in tobj
+            $atype = object.typeof $aitem
             # "Calling recursive array objectclone(";aitem;") of type ";atype;"\n"
-            if atype == "array" || atype == "object" || atype == "iterator"
-                clone = array.add clone __utils_objectclone(aitem)
+            if $atype == "array" || $atype == "object" || $atype == "iterator"
+                clone = array.add clone __utils_objectclone($aitem)
             else
-                clone = array.add clone aitem
+                clone = array.add clone $aitem
             end
         end
         ret clone
@@ -66,7 +66,7 @@ func __utils_commentblock(text)
     for line in text | string.split "\n"
     "\n  | "+line
     end
-    "\n  +-----------------------------------------------------------------------------*/"
+    "\n  +-----------------------------------------------------------------------------*/\n"
     end
 
 textrude.create_library this "utils"
