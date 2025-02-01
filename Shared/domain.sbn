@@ -129,6 +129,10 @@ func __domain_getentitykeys(entity)
 # example: |-
 # e = domain.getentitykeys("User")
     # "Calling domain.getentitykeys(";entity;")\n"
+    if !entity
+        utils.writeln("domain.getentitykeys()\nError: null entity")
+        ret
+    end    
     $keys = []
     if entity
         $keys = entity.properties |
@@ -168,7 +172,8 @@ func __domain_getentitychildren(entity)
 # description: get all properties that are themselves entities ie child objects/entites from a 
 # previously loaded entity
 # e = domain.getentity("Address")
-# children = domain.__domain_getentitychildren(e)
+# children = domain.getentitychildren(e)
+    utils.writeln("Debug domain.getentitychildren("+entity+")")
     $children = []
     if entity
         for $p in entity?.properties

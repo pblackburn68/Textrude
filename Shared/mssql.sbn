@@ -134,13 +134,14 @@ func __mssql_getfkentities(name)
     $entity = domain.getentity(name);
     
 end
-  
+    
+
 func __mssql_getinterfaceproperties(item)
 # usage: mssql.getinterfaceproperties(item)
 # description: get all interface properties for an entity
 # example: |-
-# domain.getinterfaceproperties("IAudit")
-    # "Calling domain.getinterfaceproperties(";item;")\n"
+# mssql.getinterfaceproperties("IAudit")
+    # "Calling mssql.getinterfaceproperties(";item;")\n"
     $props = [] 
     for $p in item?.properties
         # "Interface property ";p.name;" ";p.type;"sqltype=";db.sqlType(p);"\n"
@@ -202,7 +203,6 @@ func __mssql_sqlType(property)
 end
 
 
-
 func __mssql_schemaentity(name)
 # usage: mssql.schemaentity(fullname)
 # description: Helper function to parse schema.entityname to object with Schema and Entity properties
@@ -231,20 +231,27 @@ func __mssql_default(prefix, prop)
     ret $default
 end
 
+
+func __mssql_foreignkey(ptable, ftable, keys)
+    $fields = (keys | array.join ",")
+    $fk = "ALTER TABLE "+ptable+" ADD CONSTRAINT FK_"+ptable+ftable+" FOREIGN KEY ("+$fields+") REFERENCES "+ftable+"("+$fields")";
+end
+
+
 func __mssql_primarykey(table, keys)
     $pksql = "CONSTRAINT [PK_"+table+"_"+(keys | array.join "_")+"] PRIMARY KEY CLUSTERED("+(keys | array.join ",")+")"
     ret $pksql
 end
 
 func __mssql_getschemanames(model)
-# usage: domain.getschemanames(model)
+# usage: mssql.getschemanames(model)
 # description: get all schema names used in the domain model 
 # example: |-
-# snames = domain.getschemanames(model)
+# snames = mssql.getschemanames(model)
 # outputs UserId
     $schemas = model.entities |
-                array.filter @(do(p); ret p.schema != null && string.downcase(p.schema) != "dbo"; end) |
-                array.map "schema" 
+               array.filter @(do(p); ret p.schema != null && string.downcase(p.schema) != "dbo"; end) |
+               array.map "schema" 
     ret $schemas
 end
 
