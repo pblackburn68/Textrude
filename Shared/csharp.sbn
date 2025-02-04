@@ -46,7 +46,7 @@ end
 func __csharp_csType(property)
 # usage: csharp.csType(property)
 # description: determine C# data type from a Property object
-# where Property object has the following properties type, size, precision, scale, isIdentity
+# where Property object has the following properties type, length, precision, scale, isIdentity
 # example: |-
 # csharp.csType({type: "int32"})
 # int

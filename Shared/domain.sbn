@@ -4,16 +4,34 @@ func __domain_getentity(name)
 # description: get a named entity from the domain model
 # example: |-
 # domain.getentity("User")
-    #"Calling domain.getentity(";name;")\n"
+    # "Calling domain.getentity(";name;")\n"
     $doment = model.entities |
         array.filter @(do(p); ret p.name == name; end) |
         array.first  |
         utils.objectclone
-    if !$doment
-        "\ndomain.getentity(\"";name;"\")\nError: Unable to find entity\n"
+
+    if !$doment        
+        utils.writeln("domain.getentity()\nError: Unable to find entity ["+name+"]")
         ret
     end
+
+    # Add default key if not present
+    $keys = $doment.properties |
+            array.filter @(do(p); ret p.isKey == true; end) |
+            utils.objectclone
+    
+    # No keys found in entity or any interface being implemented 
+    # then add a default
+    if (!$keys)
+        $keyName = name+"Id";
+        $key = {name: $keyName, type:"int", isIdentity: true, isKey: true}
+        $keys = array.add $keys $key
+        $doment.properties = array.add $doment.properties $key
+    end
+
+    # Set objectproprty types flag isObject
     __domain_setEntityObjectProperties($doment)
+    
     ret $doment
 end
 
@@ -34,9 +52,10 @@ func __domain_getinterface(name)
        name = $aname[0] 
     end
     $iface = model.interfaces |
-            array.filter @(do(p); ret p.name == name; end) |
-            array.first |
-            utils.objectclone
+        array.filter @(do(p); ret p.name == name; end) |
+        array.first |
+        utils.objectclone
+
     if !$iface
         # "domain.getinterface(";name;"). Interface not found\n"
         ret
@@ -125,36 +144,32 @@ end
 
 func __domain_getentitykeys(entity)
 # usage: domain.getentitykeys(entity)
-# description: get all key properties for an given entity 
+# description: get all key properties for a given entity 
+# if no keys are defined then an integer key will be added with the name entityId
 # example: |-
 # e = domain.getentitykeys("User")
-    # "Calling domain.getentitykeys(";entity;")\n"
+    
     if !entity
         utils.writeln("domain.getentitykeys()\nError: null entity")
         ret
     end    
+    # utils.writeln "Calling domain.getentitykeys("+entity.name+")"
     $keys = []
     if entity
         $keys = entity.properties |
             array.filter @(do(p); ret p.isKey == true; end) |
             utils.objectclone
     end
-    # No keys found in entity or any interface being implemented 
-    # then add a default
-    if ($keys.size == 0 )
-        $keyName = entity.name+"Id";
-        $key = {name: $keyName, type:"int", isIdentity: true, isKey: true}
-        $keys = array.add $keys $key
-    end
-    
+       
     for $iname in entity?.interfaces 
         $iface = domain.getinterface($iname)
         if ($iface?.useKey)
             $keys = array.add $keys domain.getentitykeys($iface)
         end
     end
-
+    
     ret $keys 
+
 end
 
 
@@ -162,6 +177,7 @@ func __domain_getchildren(name)
 # usage: domain.__domain_getchildren(name)
 # description: get all properties that are themselves entities ie child objects/entites for a named entity
 # children = domain.__domain_getentitychildren("Address")
+# returns an object as follows { name: entity name, entity: entity }
     $entity = __domain_getentity(name)
     ret __domain_getentitychildren($entity) 
 end
@@ -171,9 +187,10 @@ func __domain_getentitychildren(entity)
 # usage: domain.__domain_getentitychildren(entity)
 # description: get all properties that are themselves entities ie child objects/entites from a 
 # previously loaded entity
-# e = domain.getentity("Address")
+# e = domain.getentitychildren("Address")
 # children = domain.getentitychildren(e)
-    utils.writeln("Debug domain.getentitychildren("+entity+")")
+# returns an object as follows { name: entity name, entity: entity }
+    # utils.writeln("Debug domain.getentitychildren("+entity+")")
     $children = []
     if entity
         for $p in entity?.properties
@@ -201,13 +218,19 @@ func __domain_getchildkeys(type, prefix = null)
     $keys = __domain_getkeys(type)
     # "domain.getchildkeys()";$keys;"\n"
     
-    # Mark all the child keys as not an identity as they are link fields eg. foreign keys
+    # Mark all the child keys as not an identity as they are associated entities 
     for $k in $keys
         if prefix
             $k.name = string.replace prefix "{key}" $k.name
         end
         $k.isIdentity = false;
         $k.isKey = false;
+    end
+    if !$keys
+        $keyName = type+"Id";
+        $key = {name: $keyName, type:"int", isIdentity: false, isKey: false}
+        $key.sqlType =  mssql.sqlType($key);
+        $keys = [$key]
     end
     ret $keys
 end
@@ -236,13 +259,14 @@ func __domain_setEntityObjectProperties(entity)
     entity.properties = array.each entity.properties @__domain_setPropertyIsObject
 end
 
+
 func __domain_setPropertyIsObject(property)
-# usage: domain.setSimpleType(property)
-# description: Set a simple type based on yaml model type
-# eg. provide a method to determine if the type is a simple type, sttring, number, date etc or a child object type
+# usage: domain.setPropertyIsObject(property)
+# description: Set the isObject flag if the property type is not one of the simple yaml model types
+# eg. provide a method to determine if the type is a child object type
 # example: 1-
-# db.sqltype({type: "int32", isIdentity: true})
-# INT IDENTITY (1,1) NOT NULL
+# domain.setPropertyIsObject({name: "User", type: "User"})
+# 
     if ! property
         ret
     end

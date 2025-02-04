@@ -1,6 +1,5 @@
 {{
-# Sql server specific domain functions
-include "domain.sbn"
+include "domain.sbn"  # domain helper functions
 
 func __mssql_getentity(name)
 # usage: mssql.getentity(name)
@@ -8,11 +7,12 @@ func __mssql_getentity(name)
 # also expands all interface properties
 # example: |-
 # mssql.getentity("User")
+    # "mssql.getentity(";name;")\n"
     $doment = domain.getentity(name)
     if (!$doment)
         ret
     end
-    # "mssql.getentity(";name;")";$doment;"\n"
+    
     #if (!$doment.properties) 
     #    "No properties defined on type ";name;"\n"
     #end
@@ -24,14 +24,9 @@ func __mssql_getentity(name)
         if ($domep.isObject)
             # Get child keys
             $ckeys = domain.getchildkeys($domep.type)
-            # "Keys";$ckeys[0];"\n"
-            # We have child keys defined then use them else create a new key based on typename
-            if ($ckeys.size > 0)
-                $props | array.concat $ckeys
-            else
-                $keyName = $domep.type+"Id";
-                $key = {name: $keyName, type:"int", isIdentity: false, isKey: false}
-                $key.sqlType =  mssql.sqlType($key);
+            # Add default sql type to keys
+            for $key in $ckeys
+                $key.sqlType = mssql.sqlType($key)
                 $props = array.add $props $key
             end
         else
@@ -108,6 +103,7 @@ func __mssql_getchildren(name)
 # usage: mssql.getchildren(name)
 # description: get all properties that are themselves entities ie child objects/entites for a named entity
 # children = mssql.getentitychildren("Address")
+    # "mssql.getchildren(";name;")\n"
     $e = domain.getentity(name)
     ret __mssql_getentitychildren($e)
 end

@@ -57,8 +57,9 @@ entities:
   - IReference
   - IAudit
 - name: Project
-  interfaces: 
-  - IAudit
+  schema: dbo
+  interfaces:
+  - IAudit 
   properties:
   - name: Name 
     type: string
@@ -80,7 +81,7 @@ entities:
     default: 1
 - name: Epic
   interfaces: 
-  - IAudit
+  - IAudit 
   properties:
   - name: Project 
     type: Project 
@@ -102,8 +103,52 @@ entities:
   - name: IsActive
     type: bool
     default: 1
-
- 
+  - name: StartDate
+    type: datetime
+    isNullable: true
+  - name: TargetDate
+    type: datetime
+    isNullable: true
+  - name: CompletedDate
+    type: datetime
+    isNullable: true
+- name: Feature
+  interfaces: 
+  - IAudit 
+  properties:
+  - name: Epic
+    type: Epic
+  - name: Name 
+    type: string
+  - name: StartDate
+    type: datetime
+    isNullable: true
+  - name: TargetDate
+    type: datetime
+    isNullable: true
+  - name: CompletedDate
+    type: datetime  
+    isNullable: true
+- name: Story
+  interfaces: 
+  - IAudit 
+  properties:
+  - name: Feature
+    type: Feature
+  - name: Name 
+    type: string
+  - name: Points
+    type: int
+    default: 0
+  - name: StartDate
+    type: datetime
+    isNullable: true
+  - name: TargetDate
+    type: datetime
+    isNullable: true
+  - name: CompletedDate
+    type: datetime    
+    isNullable: true
 
   
 

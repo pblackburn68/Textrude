@@ -6,17 +6,17 @@ include "csharp.sbn"
 utils.commentblock("Generate a SQL script based on a yaml File DomainTest.yaml
 Purpose: Quick example to demonstrate the power of scriban")
 # Script to generate entity creation
-# include "mssql.entities.sbn"
+# include "mssql.entities.sbn" 
 name = "Epic"
-me = mssql.getentity(name)
+me = mssql.getentity(name) 
 children = mssql.getchildren(name)
 "\nChildren ";children;"\n"
-for c in children 
-    mkeys = domain.getkeys(c.name) | array.map "name" | array.join ","
+for c in children
+    mkeys = domain.getkeys(c.name) | array.map "name" | array.join "," 
     "\nKeys ";mkeys
 }} 
-ALTER TABLE {{me.schema}}.{{me.name}} ADD CONSTRAINT FK_{{me.schema}}_{{me.name}}_{{c.schema}}_{{c.name}}
-    FOREIGN KEY {{c.schema}}.{{c.name}}({{mkeys}})
+ALTER TABLE {{me.schema}}.{{me.name}} ADD CONSTRAINT FK_{{me.schema}}_{{me.name}}_{{c.entity.schema}}_{{c.entity.name}}
+    FOREIGN KEY {{c.entity.schema}}.{{c.name}}({{mkeys}})
 {{ 
 end
 }} 
