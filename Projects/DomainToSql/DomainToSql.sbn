@@ -10,7 +10,7 @@ Purpose: Quick example to demonstrate the power of scriban")
 name = "Epic"
 me = mssql.getentity(name)
 children = mssql.getchildren(name)
-"\nChildren ";children 
+"\nChildren ";children;"\n"
 for c in children 
     mkeys = domain.getkeys(c.name) | array.map "name" | array.join ","
     "\nKeys ";mkeys
