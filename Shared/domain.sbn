@@ -22,7 +22,7 @@ func __domain_getentity(name)
     
     # No keys found in entity or any interface being implemented 
     # then add a default
-    if (!$keys)
+    if (!$keys || $keys.size == 0)
         $keyName = name+"Id";
         $key = {name: $keyName, type:"int", isIdentity: true, isKey: true}
         $keys = array.add $keys $key
