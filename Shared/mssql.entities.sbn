@@ -11,7 +11,7 @@ GO
 for e in model.entities 
     schema = e.schema ? e.schema : "dbo"  
 }} 
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OB JECT_ID(N'[{{schema}}].[{{e.name}}]') AND type IN (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[{{schema}}].[{{e.name}}]') AND type IN (N'U'))
 BEGIN 
     CREATE TABLE [{{schema}}].[{{e.name}}]
     (
@@ -22,4 +22,14 @@ BEGIN
         {{mssql.primarykey(e.name, domain.getkeynames(dbe))}}
     )   
 END 
+{{
+# "Entity";dbe;"\n"
+children = mssql.getchildren(dbe.name)
+# "Children";children;"\n"
+for c in children
+   keys = domain.getentitykeys(c.entity) 
+   mssql.foreignkey(dbe.schema+"."+dbe.name, c.entity.schema+"."+c.name, keys)
+end
+}}
+
 {{end}}

@@ -59,30 +59,12 @@ func __mssql_getentity(name)
             end
             $domip.sqlType = mssql.sqlType($domip)    
             # "Adding interface property ";$domip;" @ ";$fidx;"\n"
-            $doment.properties = $doment.properties | array.insert_at $fidx++ $domip
+            if !domain.getproperty($doment.properties, $domip.name)
+                $doment.properties = $doment.properties | array.insert_at $fidx++ $domip
+            end
         end
     end
-    # Check if the entity has a key field specified
-    # if not found then add key field of type int identity
-    $keys = __domain_getentitykeys($doment)
 
-    # "getentity(";name;") -> domain.getentitykeys()->";keys;keys.size;"\n"
-    # If no key specified default adding a new int identity column
-    if (!$keys || $keys.size == 0)
-        $keyName = name+"Id";
-        $key = null
-        if ($doment?.properties)
-            $key = __domain_getproperty($doment.properties, $keyName)
-        end
-        if !$key 
-            $key = {name: $keyName, type:"int", isIdentity: true, isKey: true}
-            $key.sqlType = mssql.sqlType($key)
-        else
-            $key.isKey = true
-            $key.isIdentity = true
-        end
-        $doment.properties = $doment?.properties | array.insert_at 0 $key
-    end
     if !$doment.schema
         $doment.schema = "dbo"
     end
@@ -229,8 +211,20 @@ end
 
 
 func __mssql_foreignkey(ptable, ftable, keys)
-    $fields = (keys | array.join ",")
-    $fk = "ALTER TABLE "+ptable+" ADD CONSTRAINT FK_"+ptable+ftable+" FOREIGN KEY ("+$fields+") REFERENCES "+ftable+"("+$fields")";
+# usage: mssql.foreignkey(ptable,ftable, keys)
+# description: generate SQL server alter table to add a foreign key from 
+# primary table ptable to related table ftable using keys to join
+# example: |-
+# snames = mssql.foreignkey("User","Address","UserId")
+# outputs UserId
+    if (object.typeof(keys) == "array")
+        $fields = (keys | array.map "name" | array.join ",")
+    else
+        $fields = keys
+    end
+    $fkname = "FK_"+string.replace(string.replace(ptable+"_"+ftable,"dbo.",""),".","_") 
+    # "mssql.foreignkey ";$fkname;" ";ftable;" ";ptable;" ";$fields;"\n"
+    ret "ALTER TABLE "+ptable+" ADD CONSTRAINT "+$fkname+" FOREIGN KEY("+$fields+") REFERENCES "+ftable+"("+$fields+")\n";
 end
 
 

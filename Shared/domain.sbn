@@ -22,11 +22,24 @@ func __domain_getentity(name)
     
     # No keys found in entity or any interface being implemented 
     # then add a default
+    $addId = false
+
     if (!$keys || $keys.size == 0)
+        $addId = true
+        for $iname in $doment.interfaces
+            # Get the interface
+            $iface = domain.getinterface($iname)
+            # if we are using the key from an interface then do not add our default key
+            if $iface.useKey
+                $addId = false
+            end
+        end
+    end
+    if ($addId)
         $keyName = name+"Id";
         $key = {name: $keyName, type:"int", isIdentity: true, isKey: true}
         $keys = array.add $keys $key
-        $doment.properties = array.add $doment.properties $key
+        $doment.properties = array.insert_at $doment.properties 0 $key
     end
 
     # Set objectproprty types flag isObject
@@ -145,14 +158,18 @@ end
 func __domain_getentitykeys(entity)
 # usage: domain.getentitykeys(entity)
 # description: get all key properties for a given entity 
-# if no keys are defined then an integer key will be added with the name entityId
 # example: |-
-# e = domain.getentitykeys("User")
+# entity = domain.getentity("User")
+# keys = domain.getentitykeys(entity)
     
     if !entity
         utils.writeln("domain.getentitykeys()\nError: null entity")
         ret
     end    
+    if object.typeof(entity) != "object"
+        utils.writeln("domain.getentitykeys()\nError: entity is not an object\n"+entity+"\n")
+        ret
+    end
     # utils.writeln "Calling domain.getentitykeys("+entity.name+")"
     $keys = []
     if entity
@@ -160,7 +177,8 @@ func __domain_getentitykeys(entity)
             array.filter @(do(p); ret p.isKey == true; end) |
             utils.objectclone
     end
-       
+    
+    #"domain.getentitykeys()\n Keys: ";$keys   
     for $iname in entity?.interfaces 
         $iface = domain.getinterface($iname)
         if ($iface?.useKey)
@@ -172,6 +190,30 @@ func __domain_getentitykeys(entity)
 
 end
 
+
+func __domain_getkeyscsv(name)
+# usage: domain.getentitykeyscsv(entity)
+# description: get all properties marked isKey as a comma separated list from a named entity
+# children = domain.getentitykeyscsv("Address")
+# returns csv list of keys
+    $entity = __domain_getentity(name)
+    ret __domain_getentitykeyscsv($entity)
+end
+
+
+func __domain_getentitykeyscsv(entity)
+    # usage: domain.getentitykeyscsv(entity)
+    # description: get all properties marked isKey as a comma separated list from a named entity
+    # children = domain.getentitykeyscsv("Address")
+    # returns csv list of keys
+        $keys = __domain_getentitykeys(entity)
+        if !$keys
+            "domain.getentitykeyscsv()\nError: No keys found for [";entity.name;"]\n";entity;"\n"
+        end
+        # "domain.getentitykeyscsv()\n";entity;"\nEntity Keys : ";$keys;"\n"
+        ret __domain_getentitykeys(entity) | array.map "name" | array.join "," 
+    end
+    
 
 func __domain_getchildren(name)
 # usage: domain.__domain_getchildren(name)
@@ -247,8 +289,16 @@ func __domain_getkeynames(entity)
     ret $keys | array.map "name" 
 end
 
+
 func __domain_getproperty(properties, name)
-    # "Calling domain.getchilgetproperty(";properties;",";name;")\n"
+# usage: domain.getproperty(properties, name)
+# description: get a named property from a properties array
+# example: |-
+# e = domain.getentity("User")
+# fn = domain.getproperty(e.properties, "FirstName")
+# fn. type
+# outputs string
+    # "Calling domain.getproperty(";properties;",";name;")\n"
     $prop = properties | 
            array.filter @(do(p); ret p.name == name; end) |
            array.first
