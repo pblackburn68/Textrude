@@ -182,7 +182,17 @@ func __domain_getentitykeys(entity)
     for $iname in entity?.interfaces 
         $iface = domain.getinterface($iname)
         if ($iface?.useKey)
-            $keys = array.concat $keys domain.getentitykeys($iface)
+            # Get interface keys
+            $ikeys = domain.getentitykeys($iface)
+            # Get the names of the keys
+            $knames = $keys | array.map "name"
+            # Add the keys from the interface that are not already in the keys array
+            for $ikey in $ikeys
+                if !array.contains($knames,$ikey.name)
+                    $keys = array.add $keys $ikey
+                end
+            end
+            # $keys = array.concat $keys domain.getentitykeys($iface)
         end
     end
     
@@ -286,6 +296,7 @@ func __domain_getkeynames(entity)
 # keys = domain.getkeynames(e)
 # outputs UserId
     $keys = __domain_getentitykeys(entity)
+    # "domain.getkeynames(";entity;")\n";$keys;"\n"  
     ret $keys | array.map "name" 
 end
 

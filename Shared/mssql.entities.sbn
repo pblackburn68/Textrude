@@ -8,28 +8,28 @@ BEGIN
 END{{~end}}      
 GO
 {{
-for e in model.entities 
+
+sqlentities = mssql.getentities(model)
+for e in sqlentities
     schema = e.schema ? e.schema : "dbo"  
 }} 
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[{{schema}}].[{{e.name}}]') AND type IN (N'U'))
 BEGIN 
     CREATE TABLE [{{schema}}].[{{e.name}}]
     (
-    {{~ dbe = mssql.getentity(e.name) 
-    for p in dbe?.properties~}} 
+    {{~ 
+    for p in e?.properties~}} 
         [{{ p.name }}] {{p.sqlType}}{{ p.default ? " "+mssql.default(e.name,p) : "" }},     
     {{~end~}} 
-        {{mssql.primarykey(e.name, domain.getkeynames(dbe))}}
+        {{mssql.primarykey(e.name, domain.getkeynames(e))}}
     )   
 END 
 {{
-# "Entity";dbe;"\n"
-children = mssql.getchildren(dbe.name)
-# "Children";children;"\n"
-for c in children
-   keys = domain.getentitykeys(c.entity) 
-   mssql.foreignkey(dbe.schema+"."+dbe.name, c.entity.schema+"."+c.name, keys)
 end
-}}
-
-{{end}}
+for e in sqlentities
+    children = mssql.getchildren(e.name)
+    for c in children
+    keys = domain.getentitykeys(c.entity) 
+    mssql.foreignkey(e.schema+"."+e.name, c.entity.schema+"."+c.name, keys)
+    end
+end

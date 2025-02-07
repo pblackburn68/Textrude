@@ -71,7 +71,20 @@ func __mssql_getentity(name)
     end
     ret $doment
 end
-    
+
+
+func __mssql_getentities(model)
+# usage: mssql.getentities(model)
+# description: Get all entities from the domain model with sql server specific attributes eg SqlType
+# example: |-
+# mssql.getentities(model)
+    $ents = []
+    for $ent in model.entities
+        $ents = array.add $ents __mssql_getentity($ent.name)
+    end
+    ret $ents
+end
+
 
 func __mssql_getkeys(name)
 # usage: mssql.getkeys(name)
@@ -256,6 +269,11 @@ end
 
 
 func __mssql_primarykey(table, keys)
+# usage: mssql.primarykey(table, keys)
+# description: generate SQL server primary key constraint for a table
+# example: |-
+# snames = mssql.primarykey("User","UserId")
+    # "mssql.primarykey('";table;"',";keys;")\n"
     $pksql = "CONSTRAINT [PK_"+table+"_"+(keys | array.join "_")+"] PRIMARY KEY CLUSTERED("+(keys | array.join ",")+")"
     ret $pksql
 end

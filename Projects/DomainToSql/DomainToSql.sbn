@@ -13,15 +13,15 @@ include "mssql.entities.sbn"
 namespace {{model.name}} {
     {{for e in model.entities}} 
 public class {{e.name}} {{domain.getinterfacescsv(e)}} 
-{
+{ 
     {{~ 
     dbe = csharp.getentity(e.name)
     for p in dbe?.properties~}} 
         public {{ p.csType }} {{ p.name }} {get;set;}       
     {{~end~}}  
-}
-{{  end}}  
-{{end}}
+} 
+{{  end}} 
+{{end}} 
 {{capture ts}} 
- 
+
 {{end}} 
