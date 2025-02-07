@@ -1,4 +1,4 @@
-name: ASB
+name: AgileStoryBuilder
 interfaces: 
 - name: IAuditUser
   baseType: User

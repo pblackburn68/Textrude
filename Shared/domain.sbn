@@ -167,7 +167,7 @@ func __domain_getentitykeys(entity)
         ret
     end    
     if object.typeof(entity) != "object"
-        utils.writeln("domain.getentitykeys()\nError: entity is not an object\n"+entity+"\n")
+        utils.writeln("domain.getentitykeys()\nError: Passed parameter is not an object\n"+entity+"\n")
         ret
     end
     # utils.writeln "Calling domain.getentitykeys("+entity.name+")"
@@ -178,11 +178,11 @@ func __domain_getentitykeys(entity)
             utils.objectclone
     end
     
-    #"domain.getentitykeys()\n Keys: ";$keys   
+    # "domain.getentitykeys()\n Keys: ";$keys;"\n"   
     for $iname in entity?.interfaces 
         $iface = domain.getinterface($iname)
         if ($iface?.useKey)
-            $keys = array.add $keys domain.getentitykeys($iface)
+            $keys = array.concat $keys domain.getentitykeys($iface)
         end
     end
     

@@ -24,6 +24,7 @@ func __mssql_getentity(name)
         if ($domep.isObject)
             # Get child keys
             $ckeys = domain.getchildkeys($domep.type)
+            # "mssql.getentity(";name;")\ndomain.getchildkeys(";$domep.type;")\n";$ckeys;"\n"
             # Add default sql type to keys
             for $key in $ckeys
                 $key.sqlType = mssql.sqlType($key)
@@ -191,13 +192,38 @@ func __mssql_schemaentity(name)
     $ts = {}
 
     if $parts | array.size == 2
-        $ts.schema = parts[0]
-        $ts.entity = parts[1]
+        $ts.schema = $parts[0]
+        $ts.entity = $parts[1]
     else
         $ts.schema = "dbo"
         $ts.entity = name
     end
     ret $ts
+end
+
+
+func __mssql_quotename(name)
+# usage: mssql.quotename(name)
+# description: Helper function to quote a name with square brackets
+# example: |-
+# mssql.quotename("Test")
+# [Test]
+    if name | string.starts_with "[" and name | string.ends_with "]"
+        ret name
+    else
+        ret "["+name+"]"
+    end
+end
+
+
+func __mssql_quoteentityname(name)
+# usage: mssql.quoteentityname(name)
+# description: Helper function to quote a schema.entity name with square brackets
+# example: |-
+# mssql.quoteentityname("Reference.Test")
+# [Reference].[Test]
+    $ts = __mssql_schemaentity(name)
+    ret "["+$ts.schema+"].["+$ts.entity+"]"
 end
 
 
@@ -223,8 +249,9 @@ func __mssql_foreignkey(ptable, ftable, keys)
         $fields = keys
     end
     $fkname = "FK_"+string.replace(string.replace(ptable+"_"+ftable,"dbo.",""),".","_") 
+    
     # "mssql.foreignkey ";$fkname;" ";ftable;" ";ptable;" ";$fields;"\n"
-    ret "ALTER TABLE "+ptable+" ADD CONSTRAINT "+$fkname+" FOREIGN KEY("+$fields+") REFERENCES "+ftable+"("+$fields+")\n";
+    ret "ALTER TABLE "+ __mssql_quoteentityname(ptable)+" ADD CONSTRAINT "+$fkname+" FOREIGN KEY("+$fields+") REFERENCES "+__mssql_quoteentityname(ftable)+"("+$fields+")\n";
 end
 
 
