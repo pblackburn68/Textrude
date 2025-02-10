@@ -30,6 +30,7 @@ for e in sqlentities
     children = mssql.getchildren(e.name)
     for c in children
     keys = domain.getentitykeys(c.entity) 
-    mssql.foreignkey(e.schema+"."+e.name, c.entity.schema+"."+c.name, keys)
+    mssql.foreignkey(e.schema+"."+e.name, c.entity.schema+"."+c.name, keys);"\n"
+
     end
 end

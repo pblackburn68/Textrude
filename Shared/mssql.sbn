@@ -262,9 +262,10 @@ func __mssql_foreignkey(ptable, ftable, keys)
         $fields = keys
     end
     $fkname = "FK_"+string.replace(string.replace(ptable+"_"+ftable,"dbo.",""),".","_") 
-    
+    $psent = __mssql_schemaentity(ptable)
     # "mssql.foreignkey ";$fkname;" ";ftable;" ";ptable;" ";$fields;"\n"
-    ret "ALTER TABLE "+ __mssql_quoteentityname(ptable)+" ADD CONSTRAINT "+$fkname+" FOREIGN KEY("+$fields+") REFERENCES "+__mssql_quoteentityname(ftable)+"("+$fields+")\n";
+    $sql = "IF NOT EXISTS( SELECT * FROM INFORMATION_SCHEMA.CONSTRAINT_TABLE_USAGE CT WHERE CT.TABLE_SCHEMA = '"+$psent.schema+"' AND CT.TABLE_NAME = '"+$psent.entity+"' AND CT.CONSTRAINT_NAME = '"+$fkname+"')\n    "
+    ret $sql + "ALTER TABLE "+ __mssql_quoteentityname(ptable)+" ADD CONSTRAINT "+$fkname+" FOREIGN KEY("+$fields+") REFERENCES "+__mssql_quoteentityname(ftable)+"("+$fields+")\n";
 end
 
 
