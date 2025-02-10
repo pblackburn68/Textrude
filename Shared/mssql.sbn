@@ -121,12 +121,7 @@ func __mssql_getentitychildren(entity)
 end
     
 
-func __mssql_getfkentities(name)
-    $fkents = []
-    $entity = domain.getentity(name);
-    
-end
-    
+   
 
 func __mssql_getinterfaceproperties(item)
 # usage: mssql.getinterfaceproperties(item)
@@ -249,23 +244,23 @@ func __mssql_default(prefix, prop)
 end
 
 
-func __mssql_foreignkey(ptable, ftable, keys)
-# usage: mssql.foreignkey(ptable,ftable, keys)
+func __mssql_foreignkey(ptable, ftable, pkey, fkey)
+# usage: mssql.foreignkey(ptable,ftable, pkey, fkey)
 # description: generate SQL server alter table to add a foreign key from 
-# primary table ptable to related table ftable using keys to join
+# primary table ptable to related table ftable using pkey from primary table and fkey from related table
 # example: |-
-# snames = mssql.foreignkey("User","Address","UserId")
-# outputs UserId
-    if (object.typeof(keys) == "array")
-        $fields = (keys | array.map "name" | array.join ",")
-    else
-        $fields = keys
-    end
-    $fkname = "FK_"+string.replace(string.replace(ptable+"_"+ftable,"dbo.",""),".","_") 
+# snames = mssql.foreignkey("User","Address","UserId","UserId")
+# snames
+# ALTER TABLE [dbo].[User] ADD CONSTRAINT FK_User_Address FOREIGN KEY(UserId) REFERENCES [dbo].[Address](UserId)
+    
+    $pfields = utils.array2csv( pkey, "name")
+    $ffields = utils.array2csv( fkey, "name")
+    
+    $fkname = "FK_"+string.replace(string.replace(ptable+"_"+ftable,"dbo.",""),".","_")+"_"+string.replace($pfields,",","_")
     $psent = __mssql_schemaentity(ptable)
     # "mssql.foreignkey ";$fkname;" ";ftable;" ";ptable;" ";$fields;"\n"
     $sql = "IF NOT EXISTS( SELECT * FROM INFORMATION_SCHEMA.CONSTRAINT_TABLE_USAGE CT WHERE CT.TABLE_SCHEMA = '"+$psent.schema+"' AND CT.TABLE_NAME = '"+$psent.entity+"' AND CT.CONSTRAINT_NAME = '"+$fkname+"')\n    "
-    ret $sql + "ALTER TABLE "+ __mssql_quoteentityname(ptable)+" ADD CONSTRAINT "+$fkname+" FOREIGN KEY("+$fields+") REFERENCES "+__mssql_quoteentityname(ftable)+"("+$fields+")\n";
+    ret $sql + "ALTER TABLE "+ __mssql_quoteentityname(ptable)+" ADD CONSTRAINT "+$fkname+" FOREIGN KEY("+$pfields+") REFERENCES "+__mssql_quoteentityname(ftable)+"("+$ffields+")\n";
 end
 
 

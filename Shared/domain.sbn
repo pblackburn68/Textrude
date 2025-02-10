@@ -59,7 +59,7 @@ func __domain_getinterface(name)
 # domain.getinterface("IAudit")
 # domain.getinterface("IUser:0")
 # https://github.com/scriban/scriban/issues/386
-    # "Calling domain.getinterface(";name;")\n"
+    # "domain.getinterface(";name;")\n"
     $aname = name | string.split ":"
     if $aname.size > 1
        name = $aname[0] 
@@ -79,8 +79,23 @@ func __domain_getinterface(name)
           $iface.useKey = $aname[2]
         end
     end
+    # Set objectproprty types flag isObject
     __domain_setEntityObjectProperties($iface)
+
+    # Get all object properties for the interface with a keyed name
+    $ctypes = $iface.properties |
+        array.filter @(do(p); ret p.isObject == true && string.contains(p.name, "{key}"); end) 
+    
+    # Set the keyed name for each object property
+    for $ctype in $ctypes
+        $keys = __domain_getkeys($ctype.type) | array.map "name"
+        $keyname = $keys | array.join "_"
+        # "domain.getinterface();domain.getkeys()";$keyname;"\n"
+        $ctype.name = string.replace $ctype.name "{key}" $keyname
+    end
+
     ret $iface
+
 end
 
 
@@ -250,9 +265,13 @@ func __domain_getentitychildren(entity)
                 $children = array.add $children {name: $p.name, entity: domain.getentity($p.type)}
             end
         end
-        for $p in entity?.interfaces 
-            if $p.isObject
-                $children = array.add $children {name: $p.name, entity:domain.getentity($p.type) }
+        
+        for $i in entity?.interfaces
+            $iface = domain.getinterface($i)
+            for $p in $iface?.properties
+                if $p.isObject
+                    $children = array.add $children {name: $p.name, entity:domain.getinterface($p.type) }
+                end
             end
         end
     end

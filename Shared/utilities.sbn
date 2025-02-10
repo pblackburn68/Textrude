@@ -52,6 +52,7 @@ func __utils_objectclone(tobj, clone = null)
     end
 end
 
+
 func __utils_commentblock(text)
 # usage: utils.commentblock(text)
 # description: Display text in a sql comment block
@@ -72,6 +73,21 @@ end
 
 func __utils_writeln(text)
     text;"\n"
+end
+
+
+func __utils_array2csv(arr, item)
+# usage: utils.array2csv(array, item)
+# description: Convert an array to a csv string
+# example: |-
+# utils.array2csv(["a","b","c"], ",")
+# "a,b,c"
+    if (object.typeof(arr) == "array")
+        $csv = arr | array.map item | array.join ","
+    else
+        $csv = arr    
+    end
+    ret $csv
 end
 
 textrude.create_library this "utils"
