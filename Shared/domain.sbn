@@ -92,6 +92,8 @@ func __domain_getinterface(name)
         $keyname = $keys | array.join "_"
         # "domain.getinterface();domain.getkeys()";$keyname;"\n"
         $ctype.name = string.replace $ctype.name "{key}" $keyname
+        # Add property indicating to use this name rather than the std key field name
+        $ctype.useName = true
     end
 
     ret $iface
@@ -270,7 +272,7 @@ func __domain_getentitychildren(entity)
             $iface = domain.getinterface($i)
             for $p in $iface?.properties
                 if $p.isObject
-                    $children = array.add $children {name: $p.name, entity:domain.getinterface($p.type) }
+                    $children = array.add $children {name: $p.name, useName: $p.useName, entity:domain.getinterface($p.type) }
                 end
             end
         end

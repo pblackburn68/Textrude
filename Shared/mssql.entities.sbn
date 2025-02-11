@@ -30,6 +30,18 @@ for e in sqlentities
     children = mssql.getchildren(e.name)
     for c in children
         keys = domain.getentitykeys(c.entity) 
-        mssql.foreignkey(e.schema+"."+e.name, c.entity.schema+"."+(c.entity?.baseType ?? c.name), c.name, keys);"\n"
+        # If key can be used multiple times we set the useName flag to true
+        # otherwise just use the primary key field name
+        if keys.size == 1
+            if c.useName
+                pkeys = c.name
+            else
+                pkeys = keys[0].name
+            end 
+        else
+            pkeys = keys
+        end
+        mssql.foreignkey(e.schema+"."+e.name, c.entity.schema+"."+(c.entity?.baseType ?? c.name), pkeys, keys);"\n"
     end
 end
+}}
