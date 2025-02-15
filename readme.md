@@ -24,7 +24,7 @@ classDiagram
   class property{
     +string: name
     +int: type
-    +int: sizeS
+    +int: size
     +bool: isIdentity
     +bool: isKey
     +bool: isObject

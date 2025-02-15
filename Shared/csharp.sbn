@@ -20,23 +20,24 @@ func __csharp_getentity(name)
         # "Adding interface properties ";iface;"-";doment.properties?.size;"\n"
         $ipos = $iface?.position ?? 1
         # for each interface property in the named interface
-        # set the corresponding sql type and add to the cloned object
-        for domip in domain.getinterfaceproperties($iface)
+        # set the corresponding c# type and add to the cloned object
+        for domip in domain.getentityproperties($iface)
             $ptype = csharp.csType(domip)
             domip.csType = $ptype
             if (string.starts_with($ptype,"I"))
                 $ptype =  $ptype | string.slice 1
             end
-            domip.name = domip.name  | string.replace "{key}" $ptype
+            domip.name =  string.replace domip.name "{key}" $ptype
             # if position = 0 then insert interface properties into the beginning of the property array
             # otherwise append them 
+            
             if $ipos == 0
                 $fidx = 0
             else
                 $fidx = $doment.properties?.size ?? 0
             end
             # "Adding interface property ";domip;"\n"
-            $doment.properties = $doment.properties | array.insert_at $fidx++ domip
+            $doment.properties =  array.insert_at $doment.properties $fidx++ domip
         end
     end
     ret $doment

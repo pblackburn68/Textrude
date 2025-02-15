@@ -49,6 +49,8 @@ entities:
     type: string  
   - name: User
     type: User
+  - name: StreetName
+    type: string
   - name: AddressType
     type: AddressType
 - name: AddressType
@@ -149,6 +151,29 @@ entities:
   - name: CompletedDate
     type: datetime    
     isNullable: true
+- name: Audit
+  virtual: true
+  interfaces: 
+  - IAudit:0:true 
+- name: Acceptance
+  inherits:
+  - Audit
+  properties:
+  - name: Story
+    type: Story
+  - name: Name 
+    type: string
+  - name: Given
+    type: string
+    size: 255
+  - name: When
+    type: string
+    size: 255
+  - name: Then
+    type: string
+    size: 255
+  - name: IsActive
+    type: bool
 
   
 

@@ -10,6 +10,12 @@ func __domain_getentity(name)
         array.first  |
         utils.objectclone
 
+    if !$doment
+        $doment = domain.getinterface(name)
+    else   
+        $doment.isInterface = false
+    end
+
     if !$doment        
         utils.writeln("domain.getentity()\nError: Unable to find entity ["+name+"]")
         ret
@@ -32,6 +38,16 @@ func __domain_getentity(name)
             # if we are using the key from an interface then do not add our default key
             if $iface.useKey
                 $addId = false
+                "Adding interface properties to entity\n";$iface.properties;"\n"
+                for $ip in $iface.properties
+                    if $ip.isObject
+                        $e = domain.getentity($ip.type)
+                        $doment.properties = array.add_range $doment.properties $e.properties
+                    else
+                        $doment.properties = array.add $doment.properties $ip
+                    end
+                end
+                $doment.properties = array.add_range $doment.properties $iface.properties
             end
         end
     end
@@ -73,6 +89,8 @@ func __domain_getinterface(name)
         # "domain.getinterface(";name;"). Interface not found\n"
         ret
     end
+
+    $iface.isInterface = true
     if $aname.size > 1
         $iface.position = $aname[1]
         if $aname.size > 2
@@ -82,22 +100,56 @@ func __domain_getinterface(name)
     # Set objectproprty types flag isObject
     __domain_setEntityObjectProperties($iface)
 
-    # Get all object properties for the interface with a keyed name
-    $ctypes = $iface.properties |
-        array.filter @(do(p); ret p.isObject == true && string.contains(p.name, "{key}"); end) 
-    
-    # Set the keyed name for each object property
-    for $ctype in $ctypes
-        $keys = __domain_getkeys($ctype.type) | array.map "name"
-        $keyname = $keys | array.join "_"
-        # "domain.getinterface();domain.getkeys()";$keyname;"\n"
-        $ctype.name = string.replace $ctype.name "{key}" $keyname
-        # Add property indicating to use this name rather than the std key field name
-        $ctype.useName = true
-    end
+    # Get all the properties for the interface
+    $props = []
+    for $ip in $iface.properties
+        # Child object type
+        if $ip.isObject
+            # If {key} is used in the name then get all the keys for the object type
+            # and the child keys as properties
+            if string.contains($ip.name, "{key}")
+                $keys = __domain_getkeys($ip.type)        
+                for $key in $keys
+                    $kname = string.replace $ip.name "{key}" $key.name
+                    $props = array.add $props { name: $kname, type: $key.type, isKey: $key.isKey, isIdentity: $key.isIdentity, isObject: false }
+                end                
+            else
+                $e = domain.getentity($ip.type)
+                $props = array.add_range $props $e.properties
+            end
+        else
+            $props = array.add $props $ip
+        end
+    end  
+    $iface.properties = $props
 
     ret $iface
+end
 
+
+func __domain_isInterface(name)
+# description: check if a named entity is an interface
+# usage: domain.isInterface(name)
+# params: name - entity name
+# example: |-
+# domain.isInterface("IAudit")
+    $iface = model.interfaces |
+        array.filter @(do(p); ret p.name == name; end) |
+        array.first 
+    ret $iface != null
+end
+
+
+func __domain_isEntity(name)
+# description: check if a named entity is an entity
+# usage: domain.isEntity    (name)
+# params: name - entity name
+# example: |-
+# domain.isEntity("Audit")
+    $e = model.entities |
+         array.filter @(do(p); ret p.name == name; end) |
+         array.first 
+    ret $e != null
 end
 
 
@@ -116,7 +168,9 @@ func __domain_getinterfacescsv(entity)
         if $aname.size > 1
             $name = $aname[0] 
         end
-        $list = $list + $name + ", " 
+        if !($aname.size == 4 && $aname[3] == "dbonly")
+            $list = $list + $name + ", " 
+        end
     end
     if $list != ''
         $list = string.remove_last $list ","
@@ -133,21 +187,21 @@ func __domain_getinterfacepropertiesbyname(name)
 # domain.getinterfacepropertiesbyname("IAudit")
     # "Calling domain.getinterfacepropertiesbyname(";name;")\n"
     $item = __domain_getinterface(name)
-    ret __domain_getinterfaceproperties($item)
+    ret __domain_getentityproperties($item)
 end
 
 
-func __domain_getinterfaceproperties(entity)
-# usage: domain.getinterfaceproperties(entity)
-# description: get all interface properties for an entity
+func __domain_getentityproperties(entity)
+# usage: domain.getentityproperties(entity)
+# description: get all properties for an entity
 # example: |-
 # domain.getinterfaceproperties("IAudit")
-    # "Calling domain.getinterfaceproperties(";entity;")\n"
     $props = [] 
     for $p in entity?.properties
-        __domain_setPropertyIsObject($p)
+        $p = __domain_setPropertyIsObject($p)
         if $p.isObject
-            $props = array.add_range $props __domain_getinterfacepropertiesbyname($p.type)
+            $e = __domain_getentity($p.type)
+            $props = array.add_range $props $e.properties
         else
             $props = array.add $props $p 
         end
@@ -337,6 +391,7 @@ func __domain_getproperty(properties, name)
     ret $prop
 end      
 
+
 func __domain_setEntityObjectProperties(entity)
     entity.properties = array.each entity.properties @__domain_setPropertyIsObject
 end
@@ -344,7 +399,7 @@ end
 
 func __domain_setPropertyIsObject(property)
 # usage: domain.setPropertyIsObject(property)
-# description: Set the isObject flag if the property type is not one of the simple yaml model types
+# description: Set the isObject and isInterface flags if the property type is not one of the simple yaml model types
 # eg. provide a method to determine if the type is a child object type
 # example: 1-
 # domain.setPropertyIsObject({name: "User", type: "User"})
@@ -352,18 +407,13 @@ func __domain_setPropertyIsObject(property)
     if ! property
         ret
     end
-    $types = [
-        "int", "int32", 
-        "string",
-        "decimal","numeric","float",
-        "bool","boolean","bit",
-        "date","datetime",
-        "long","int64",
-        "short","int16",
-        "byte",
-        "binary"
-    ]
-    property.isObject = !array.contains($types, property.type)
+    if __domain_isInterface(property.type)
+        property.isObject = true
+        property.isInterface = true
+    else
+        property.isInterface = false
+        property.isObject = __domain_isEntity(property.type)
+    end
     ret property
 end
     

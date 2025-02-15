@@ -16,60 +16,84 @@ func __mssql_getentity(name)
     #if (!$doment.properties) 
     #    "No properties defined on type ";name;"\n"
     #end
-
-    $props = []
-    # set default sqltype for all properties
-    for $domep in $doment?.properties
-        # No match to any simple yaml model proprty type then domain.getentity assigns isObject to true
-        if ($domep.isObject)
-            # Get child keys
-            $ckeys = domain.getchildkeys($domep.type)
-            # "mssql.getentity(";name;")\ndomain.getchildkeys(";$domep.type;")\n";$ckeys;"\n"
-            # Add default sql type to keys
-            for $key in $ckeys
-                $key.sqlType = mssql.sqlType($key)
-                $props = array.add $props $key
-            end
-        else
-            $domep.sqlType = mssql.sqlType($domep)
-            $props = array.add $props $domep
-        end        
-    end 
-    $doment.properties = $props;
-
-    # "Entity has the following interfaces";doment?.interfaces;"\n"
+    
+    # Expand all child properties that are entities
+    __mssql_expandentityproperties($doment)
+        
     # iterate over all interfaces used and get all their properties
     for $iname in $doment?.interfaces  
-        $iface = __domain_getinterface($iname)
-        # "Adding interface properties ";iface;"-";doment.properties?.size;"\n"
-        $ipos = $iface?.position ?? 1
-        # if position = 0 then insert interface properties into the beginning of the property array
-        # otherwise append them 
-        if $ipos == 0
-            $fidx = 0
-        else
-            $fidx = $doment.properties?.size ?? 0
-        end
-        # for each interface property in the named interface
-        # set the corresponding sql type and add to the cloned object
-        for $domip in __mssql_getinterfaceproperties($iface)
-            # Set indicator this is a top level prime interface
-            if !$iface.useKey 
-                $domip.isKey = false
-                $domip.isIdentity = false
-            end
-            $domip.sqlType = mssql.sqlType($domip)    
-            # "Adding interface property ";$domip;" @ ";$fidx;"\n"
-            if !domain.getproperty($doment.properties, $domip.name)
-                $doment.properties = $doment.properties | array.insert_at $fidx++ $domip
-            end
-        end
+        __mssql_addinterfaceproperities($doment, $iname)
+    end
+
+    for $inhname in $doment?.inherits
+
+        $ientity = __domain_getentity($inhname)
+        "domain.getentity(";$inhname;")\n"
+        $ientity;"\n"
+        __mssql_expandentityproperties($ientity)
+        "inherited entity->\n";$ientity;"\n"
     end
 
     if !$doment.schema
         $doment.schema = "dbo"
     end
     ret $doment
+end
+
+func __mssql_addinterfaceproperities(entity, ifacename)
+# usage: mssql.addinterfaceproperities(entity, iface)
+# description: Add all interface properties to an entity
+# example: |-
+# mssql.addinterfaceproperities("User","IAudit")
+    $iface = __domain_getinterface(ifacename)
+    $ipos = $iface?.position ?? 1
+    # if position = 0 then insert interface properties into the beginning of the property array
+    # otherwise append them 
+    if $ipos == 0
+        $fidx = 0
+    else
+        $fidx = entity.properties?.size ?? 0
+    end
+    # for each interface property in the named interface
+    # set the corresponding sql type and add to the cloned object
+    for $iprop in __mssql_getinterfaceproperties($iface)
+        # Set indicator this is a top level prime interface
+        if !$iface.useKey 
+            $iprop.isKey = false
+            $iprop.isIdentity = false
+        end
+        $iprop.sqlType = mssql.sqlType($iprop)    
+        # Add interface property if it does not already exist
+        if !domain.getproperty(entity.properties, $iprop.name)
+            entity.properties = entity.properties | array.insert_at $fidx++ $iprop
+        end
+    end
+end
+
+
+func __mssql_expandentityproperties(entity)
+    $props = []
+    for $domep in entity.properties
+        # If the property type is an entity
+        if ($domep.isObject)
+            if $domep.isInterface
+                __mssql_addinterfaceproperities(entity, $domep) 
+            else
+                # Get child keys
+                $ckeys = domain.getchildkeys($domep.type)
+                # "mssql.getentity(";name;")\ndomain.getchildkeys(";$domep.type;")\n";$ckeys;"\n"
+                # Add default sql type to keys
+                for $key in $ckeys
+                    $key.sqlType = mssql.sqlType($key)
+                    $props = array.add $props $key
+                end
+            end
+        else
+            $domep.sqlType = mssql.sqlType($domep)
+            $props = array.add $props $domep
+        end        
+    end 
+    entity.properties = $props;
 end
 
 
@@ -80,7 +104,9 @@ func __mssql_getentities(model)
 # mssql.getentities(model)
     $ents = []
     for $ent in model.entities
-        $ents = array.add $ents __mssql_getentity($ent.name)
+        if !$ent?.virtual
+            $ents = array.add $ents __mssql_getentity($ent.name)
+        end
     end
     ret $ents
 end
@@ -112,15 +138,33 @@ func __mssql_getentitychildren(entity)
 # e = mssql.getentity("Address")
 # children = domain.__domain_getentitychildren(e)
     $children = domain.getentitychildren(entity)
-    for $child in $children
-        if !$child.entity.schema
-            $child.entity.schema = "dbo"
+    if $children   
+        for $child in $children
+            if $child.entity && !$child.entity.schema
+                $child.entity.schema = "dbo"
+            end
         end
     end
     ret $children
 end
-    
 
+
+func __msqql_getchildkeys(name)
+# usage: mssql.getchildkeys(name)
+# description: get all keys for a child entity
+# example: |-
+# mssql.getchildkeys("Address")
+# outputs UserId
+    $props = []
+    # Get child keys
+    $ckeys = domain.getchildkeys(name)
+    # Add default sql type to keys
+    for $key in $ckeys
+        $key.sqlType = mssql.sqlType($key)
+        $props = array.add $props $key
+    end
+    ret $props
+end
    
 
 func __mssql_getinterfaceproperties(item)

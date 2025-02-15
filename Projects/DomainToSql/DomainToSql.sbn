@@ -6,23 +6,32 @@ include "csharp.sbn"
 utils.commentblock("Generate a SQL script based on a yaml File DomainTest.yaml
 Purpose: Quick example to demonstrate the power of scriban")
 # Script to generate entity creation
-include "mssql.entities.sbn" 
-# OK now primary field is wrong!
+# include "mssql.entities.sbn" 
+e = mssql.getentity("Acceptance")
+"entity \n";e;"\n" 
 }}
-{{capture cs}}
+{{capture cs}} 
 // File generated from scriban model
-namespace {{model.name}} {
-    {{for e in model.entities}} 
-public class {{e.name}} {{domain.getinterfacescsv(e)}} 
+namespace {{model.name}} { 
+    {{for e in model.entities}}
+public class {{e.name}} {{domain.getinterfacescsv(e)}}
 {
-    {{~
-    dbe = csharp.getentity(e.name) 
+    {{~ dbe = csharp.getentity(e.name)
     for p in dbe?.properties~}}
-        public {{ p.csType }} {{ p.name }} {get;set;}
-    {{~end~}}
+        public {{ p.csType }} {{ p.name }} {get;set;} 
+    {{~end~}} 
 }
 {{  end}} 
 {{end}}
-{{capture ts}}
-
-{{end}}
+{{capture ts}} 
+    {{for e in model.entities}}
+public class {{e.name}} {{domain.getinterfacescsv(e)}}
+{
+    {{~ 
+    for p in dbe?.properties~}} 
+        {{ p.csType }} {{ p.name }} 
+    {{~end~}} 
+} 
+{{  end}}
+ 
+{{end}} 
