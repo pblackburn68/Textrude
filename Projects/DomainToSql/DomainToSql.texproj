@@ -10,15 +10,6 @@
       ""
     ],
     "IncludePaths": [
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
       "c:\\Development\\MYGITHUB\\Textrude\\Shared\\"
     ],
     "Models": [
@@ -29,7 +20,7 @@
         "Name": "model"
       }
     ],
-    "Template": "{{\r\ninclude \u0022domain.sbn\u0022\r\ninclude \u0022mssql.sbn\u0022\r\ninclude \u0022utilities.sbn\u0022\r\ninclude \u0022csharp.sbn\u0022\r\nutils.commentblock(\u0022Generate a SQL script based on a yaml File DomainTest.yaml\r\nPurpose: Quick example to demonstrate the power of scriban\u0022)\r\n# Script to generate entity creation\r\n# include \u0022mssql.entities.sbn\u0022 \r\ne = mssql.getentity(\u0022Acceptance\u0022)\r\n\u0022entity \\n\u0022;e;\u0022\\n\u0022\r\n}}\r\n{{capture cs}} \r\n// File generated from scriban model\r\nnamespace {{model.name}} {\r\n    {{for e in model.entities}} \r\npublic class {{e.name}} {{domain.getinterfacescsv(e)}}\r\n{\r\n    {{~ dbe = csharp.getentity(e.name)\r\n    for p in dbe?.properties~}}\r\n        public {{ p.csType }} {{ p.name }} {get;set;} \r\n    {{~end~}} \r\n}\r\n{{  end}} \r\n{{end}}\r\n{{capture ts}} \r\n    {{for e in model.entities}}\r\npublic class {{e.name}} {{domain.getinterfacescsv(e)}}\r\n{\r\n    {{~ \r\n    for p in dbe?.properties~}} \r\n        {{ p.csType }} {{ p.name }} \r\n    {{~end~}} \r\n} \r\n{{  end}}\r\n \r\n{{end}} ",
+    "Template": "{{\r\ninclude \u0022domain.sbn\u0022\r\ninclude \u0022mssql.sbn\u0022\r\ninclude \u0022utilities.sbn\u0022\r\ninclude \u0022csharp.sbn\u0022\r\nutils.commentblock(\u0022Generate a SQL script based on a yaml File DomainTest.yaml\r\nPurpose: Quick example to demonstrate the power of scriban\u0022)\r\n# Script to generate entity creation\r\n# include \u0022mssql.entities.sbn\u0022 \r\ne = mssql.getentity(\u0022Acceptance\u0022)\r\n\u0022entity \\n\u0022;e;\u0022\\n\u0022 \r\n}}\r\n{{capture cs}} \r\n// File generated from scriban model\r\nnamespace {{model.name}} { \r\n    {{for e in model.entities}}\r\npublic class {{e.name}} {{domain.getinterfacescsv(e)}}\r\n{\r\n    {{~ dbe = csharp.getentity(e.name)\r\n    for p in dbe?.properties~}}\r\n        public {{ p.csType }} {{ p.name }} {get;set;} \r\n    {{~end~}} \r\n}\r\n{{  end}} \r\n{{end}}\r\n{{capture ts}} \r\n    {{for e in model.entities}}\r\npublic class {{e.name}} {{domain.getinterfacescsv(e)}}\r\n{\r\n    {{~ \r\n    for p in dbe?.properties~}} \r\n        {{ p.csType }} {{ p.name }} \r\n    {{~end~}} \r\n} \r\n{{  end}}\r\n \r\n{{end}} ",
     "TemplatePath": "C:\\Development\\MYGITHUB\\Textrude\\Projects\\DomainToSql\\DomainToSql.sbn"
   },
   "OutputControl": {
