@@ -57,7 +57,6 @@ entities:
   schema: Reference
   interfaces: 
   - IReference
-  - IAudit
 - name: Project
   schema: dbo
   interfaces:
@@ -174,7 +173,6 @@ entities:
     size: 255
   - name: IsActive
     type: bool
-
   
 
 

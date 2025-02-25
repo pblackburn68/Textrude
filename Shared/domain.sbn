@@ -4,7 +4,7 @@ func __domain_getentity(name)
 # description: get a named entity from the domain model
 # example: |-
 # domain.getentity("User")
-    # "Calling domain.getentity(";name;")\n"
+    # "domain.getentity(";name;")\n"
     $doment = model.entities |
         array.filter @(do(p); ret p.name == name; end) |
         array.first  |
@@ -21,37 +21,15 @@ func __domain_getentity(name)
         ret
     end
 
+    # Add all interface properties
+    __domain_addinterfaceproperties($doment)
+
     # Add default key if not present
     $keys = $doment.properties |
-            array.filter @(do(p); ret p.isKey == true; end) |
+            array.filter @(do(p); ret p?.isKey == true; end) |
             utils.objectclone
     
-    # No keys found in entity or any interface being implemented 
-    # then add a default
-    $addId = false
-
-    if (!$keys || $keys.size == 0)
-        $addId = true
-        for $iname in $doment.interfaces
-            # Get the interface
-            $iface = domain.getinterface($iname)
-            # if we are using the key from an interface then do not add our default key
-            if $iface.useKey
-                $addId = false
-                "Adding interface properties to entity\n";$iface.properties;"\n"
-                for $ip in $iface.properties
-                    if $ip.isObject
-                        $e = domain.getentity($ip.type)
-                        $doment.properties = array.add_range $doment.properties $e.properties
-                    else
-                        $doment.properties = array.add $doment.properties $ip
-                    end
-                end
-                $doment.properties = array.add_range $doment.properties $iface.properties
-            end
-        end
-    end
-    if ($addId)
+    if ( (!$keys || $keys.size == 0) && !$doment.virtual)
         $keyName = name+"Id";
         $key = {name: $keyName, type:"int", isIdentity: true, isKey: true}
         $keys = array.add $keys $key
@@ -63,6 +41,51 @@ func __domain_getentity(name)
     
     ret $doment
 end
+
+
+func __domain_addinterfaceproperties(entity)
+# usage: domain.addinterfaceproperties(entity)
+# descrption: add all interface properties recursively to a
+# given entity
+    for $iname in entity.interfaces
+        # Get the interface
+        $iface = domain.getinterface($iname)
+        
+        # Determine the starting index to insert the properties
+        $fidx = entity.properties?.size ?? 0
+        
+        if $iface.position == 0
+            $fidx = 0
+        end
+        
+        __domain_insertproperties(entity, $iface.properties, $fidx)
+        
+        # Recursively add all interface properties
+        for $ciface in $iface.interfaces
+            $iface = domain.getinterface($ciface)
+            $fidx = entity.properties?.size ?? 0
+            __domain_insertproperties(entity, $iface.properties, $fidx)
+        end
+    end
+end
+
+
+func __domain_insertproperties(entity, properties, startIndex)
+# usage: domain.insertproperties(entity,properties,startIndex)
+# description: insert properties into an entity at a given index
+# example: |-
+# domain.insertproperties(entity,properties,startIndex)
+    for $p in properties
+        if $p.isObject
+            $e = domain.getentity($ip.type)  
+            properties = __domain_insertproperties(entity, $e.properties,  startIndex++)
+        else
+            entity.properties = entity.properties | array.insert_at startIndex++ $p
+        end
+    end
+end
+
+
 
 
 func __domain_getinterface(name)
@@ -96,6 +119,9 @@ func __domain_getinterface(name)
         if $aname.size > 2
           $iface.useKey = $aname[2]
         end
+    else
+        $iface.position = 1
+        $iface.useKey = false      
     end
     # Set objectproprty types flag isObject
     __domain_setEntityObjectProperties($iface)
@@ -111,7 +137,7 @@ func __domain_getinterface(name)
                 $keys = __domain_getkeys($ip.type)        
                 for $key in $keys
                     $kname = string.replace $ip.name "{key}" $key.name
-                    $props = array.add $props { name: $kname, type: $key.type, isKey: $key.isKey, isIdentity: $key.isIdentity, isObject: false }
+                    $props = array.add $props { name: $kname, type: $key.type, isKey: false, isIdentity: $key.isIdentity, isObject: false }
                 end                
             else
                 $e = domain.getentity($ip.type)
@@ -195,7 +221,7 @@ func __domain_getentityproperties(entity)
 # usage: domain.getentityproperties(entity)
 # description: get all properties for an entity
 # example: |-
-# domain.getinterfaceproperties("IAudit")
+# domain.getentityproperties("IAudit")
     $props = [] 
     for $p in entity?.properties
         $p = __domain_setPropertyIsObject($p)
@@ -206,6 +232,7 @@ func __domain_getentityproperties(entity)
             $props = array.add $props $p 
         end
     end
+ 
     ret $props;
 end
     
@@ -241,7 +268,7 @@ func __domain_getentitykeys(entity)
         utils.writeln("domain.getentitykeys()\nError: Passed parameter is not an object\n"+entity+"\n")
         ret
     end
-    # utils.writeln "Calling domain.getentitykeys("+entity.name+")"
+
     $keys = []
     if entity
         $keys = entity.properties |
@@ -249,24 +276,13 @@ func __domain_getentitykeys(entity)
             utils.objectclone
     end
     
-    # "domain.getentitykeys()\n Keys: ";$keys;"\n"   
-    for $iname in entity?.interfaces 
-        $iface = domain.getinterface($iname)
-        if ($iface?.useKey)
-            # Get interface keys
-            $ikeys = domain.getentitykeys($iface)
-            # Get the names of the keys
-            $knames = $keys | array.map "name"
-            # Add the keys from the interface that are not already in the keys array
-            for $ikey in $ikeys
-                if !array.contains($knames,$ikey.name)
-                    $keys = array.add $keys $ikey
-                end
-            end
-            # $keys = array.concat $keys domain.getentitykeys($iface)
-        end
+    # Add default key if not present and not in a recursive call
+    if !$keys
+        $keyName = type+"Id";
+        $key = {name: $keyName, type:"int", isIdentity: false, isKey: false}
+        $key.sqlType =  mssql.sqlType($key);
+        $keys = [$key]
     end
-    
     ret $keys 
 
 end
@@ -335,14 +351,14 @@ func __domain_getentitychildren(entity)
 end
 
 
-func __domain_getchildkeys(type, prefix = null)
+func __domain_getchildkeys(name, prefix = null)
 # usage: domain.getchildkeys(type,prefix)
 # description: get all key properties for a given child property type
 # with an optional prefix (eg. When linking to the same interface/type more than once then you require a unique name)
 # eg domain.getchildkeys("IUser", "Primary{key}") would map IUser to property named PrimaryUserId
 # keys = domain.getchildkeys("User")
     # "Calling domain.getchildkeys(";type;",";prefix;")\n"
-    $keys = __domain_getkeys(type)
+    $keys = __domain_getkeys(name)
     # "domain.getchildkeys()";$keys;"\n"
     
     # Mark all the child keys as not an identity as they are associated entities 
@@ -353,12 +369,7 @@ func __domain_getchildkeys(type, prefix = null)
         $k.isIdentity = false;
         $k.isKey = false;
     end
-    if !$keys
-        $keyName = type+"Id";
-        $key = {name: $keyName, type:"int", isIdentity: false, isKey: false}
-        $key.sqlType =  mssql.sqlType($key);
-        $keys = [$key]
-    end
+  
     ret $keys
 end
 

@@ -6,22 +6,20 @@ include "csharp.sbn"
 utils.commentblock("Generate a SQL script based on a yaml File DomainTest.yaml
 Purpose: Quick example to demonstrate the power of scriban")
 # Script to generate entity creation
-# include "mssql.entities.sbn" 
-e = mssql.getentity("Acceptance")
-"entity \n";e;"\n" 
-}}
+include "mssql.entities.sbn" 
+}} 
 {{capture cs}} 
-// File generated from scriban model
-namespace {{model.name}} { 
+// File generated from scriban model 
+namespace {{model.name}} {
     {{for e in model.entities}}
 public class {{e.name}} {{domain.getinterfacescsv(e)}}
 {
-    {{~ dbe = csharp.getentity(e.name)
-    for p in dbe?.properties~}}
+    {{~  dbe = csharp.getentity(e.name) 
+    for p in dbe?.properties~}} 
         public {{ p.csType }} {{ p.name }} {get;set;} 
     {{~end~}} 
 }
-{{  end}} 
+{{  end}}
 {{end}}
 {{capture ts}} 
     {{for e in model.entities}}

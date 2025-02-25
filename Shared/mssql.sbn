@@ -13,25 +13,18 @@ func __mssql_getentity(name)
         ret
     end
     
-    #if (!$doment.properties) 
-    #    "No properties defined on type ";name;"\n"
-    #end
+    if (!$doment.properties) 
+        "mssql.getentity(";name;")\nNo properties defined on type\n"
+        ret
+    end
     
     # Expand all child properties that are entities
     __mssql_expandentityproperties($doment)
         
-    # iterate over all interfaces used and get all their properties
-    for $iname in $doment?.interfaces  
-        __mssql_addinterfaceproperities($doment, $iname)
-    end
-
     for $inhname in $doment?.inherits
-
         $ientity = __domain_getentity($inhname)
-        "domain.getentity(";$inhname;")\n"
-        $ientity;"\n"
         __mssql_expandentityproperties($ientity)
-        "inherited entity->\n";$ientity;"\n"
+        $doment.properties = array.add_range $doment.properties $ientity.properties
     end
 
     if !$doment.schema
@@ -40,59 +33,38 @@ func __mssql_getentity(name)
     ret $doment
 end
 
-func __mssql_addinterfaceproperities(entity, ifacename)
-# usage: mssql.addinterfaceproperities(entity, iface)
-# description: Add all interface properties to an entity
-# example: |-
-# mssql.addinterfaceproperities("User","IAudit")
-    $iface = __domain_getinterface(ifacename)
-    $ipos = $iface?.position ?? 1
-    # if position = 0 then insert interface properties into the beginning of the property array
-    # otherwise append them 
-    if $ipos == 0
-        $fidx = 0
-    else
-        $fidx = entity.properties?.size ?? 0
-    end
-    # for each interface property in the named interface
-    # set the corresponding sql type and add to the cloned object
-    for $iprop in __mssql_getinterfaceproperties($iface)
-        # Set indicator this is a top level prime interface
-        if !$iface.useKey 
-            $iprop.isKey = false
-            $iprop.isIdentity = false
-        end
-        $iprop.sqlType = mssql.sqlType($iprop)    
-        # Add interface property if it does not already exist
-        if !domain.getproperty(entity.properties, $iprop.name)
-            entity.properties = entity.properties | array.insert_at $fidx++ $iprop
-        end
-    end
-end
-
 
 func __mssql_expandentityproperties(entity)
+# usage: mssql.expandentityproperties(entity)
+# description: Expand all properties for an entity that are themselves entities ie child objects/entites
+# example: |-       
+# mssql.expandentityproperties(entity)
+    # "mssql.expandentityproperties(";entity;")\n"
     $props = []
     for $domep in entity.properties
         # If the property type is an entity
         if ($domep.isObject)
-            if $domep.isInterface
-                __mssql_addinterfaceproperities(entity, $domep) 
-            else
-                # Get child keys
-                $ckeys = domain.getchildkeys($domep.type)
-                # "mssql.getentity(";name;")\ndomain.getchildkeys(";$domep.type;")\n";$ckeys;"\n"
-                # Add default sql type to keys
-                for $key in $ckeys
-                    $key.sqlType = mssql.sqlType($key)
-                    $props = array.add $props $key
-                end
+            # Get child keys
+            $ckeys = domain.getchildkeys($domep.type)
+            # "mssql.getentity(";name;")\ndomain.getchildkeys(";$domep.type;")\n";$ckeys;"\n"
+            # Add default sql type to keys
+            for $key in $ckeys
+                $key.sqlType = mssql.sqlType($key)
+                $props = array.add $props $key
             end
         else
             $domep.sqlType = mssql.sqlType($domep)
             $props = array.add $props $domep
         end        
     end 
+
+    # Expand all interface properties
+    #for $iname in entity?.interfaces 
+    #    $iface = domain.getinterface($iname)
+    #    "Adding properties to entity\n";entity;"\nIFace\n";$iface;"\n"
+    #    $props = array.add_range $props domain.getentityproperties($iface)
+    #end
+
     entity.properties = $props;
 end
 
